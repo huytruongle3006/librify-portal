@@ -13,8 +13,7 @@ connectRedis();
 
 const app = express();
 
-const cors = require('cors');
-
+// Cấu hình CORS chuẩn cho Vercel và Localhost
 app.use(cors({
   origin: [
     'https://librify-portal.vercel.app',
@@ -24,6 +23,7 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
 }));
+
 app.use(express.json());
 
 // Khai báo Routes
