@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
+const AVAILABLE_CATEGORIES = [
+    'Khoa học máy tính',
+    'Công nghệ thông tin',
+    'Cơ sở dữ liệu',
+    'Hệ thống phân tán',
+    'Kiến trúc phần mềm',
+    'An toàn thông tin',
+];
 export default function ContributeModal({ isOpen, onClose, currentUser, darkMode, onSuccess }) {
     const [formData, setFormData] = useState({
         title: '',
@@ -59,7 +67,7 @@ export default function ContributeModal({ isOpen, onClose, currentUser, darkMode
                     title: ch.title?.trim() || `Chương ${idx + 1}`,
                     total_pages: Number(ch.total_pages) || 15,
                     content: ch.content && ch.content.trim() !== ''
-                        ? ch.content.trim() 
+                        ? ch.content.trim()
                         : `Nội dung chi tiết của chương ${idx + 1}...`,
                 })),
                 userId: currentUser?._id || currentUser?.id,
@@ -114,85 +122,85 @@ export default function ContributeModal({ isOpen, onClose, currentUser, darkMode
                         ✕
                     </button>
                 </div>
-{/* KHUNG QUY ĐỊNH & HƯỚNG DẪN ĐĂNG TẢI TÁC PHẨM */}
-<div
-  style={{
-    background: darkMode ? 'rgba(99, 102, 241, 0.08)' : '#f8faff',
-    border: `1px solid ${darkMode ? '#3730a3' : '#c7d2fe'}`,
-    borderRadius: '12px',
-    padding: '16px 18px',
-    marginTop: '18px',
-    marginBottom: '10px',
-  }}
->
-  <div
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      color: '#4f46e5',
-      fontWeight: '800',
-      fontSize: '14px',
-      marginBottom: '10px',
-    }}
-  >
-    <i className="fa-solid fa-circle-info" style={{ fontSize: '16px' }}></i>
-    <span>QUY ĐỊNH ĐĂNG TẢI & HƯỚNG DẪN SOẠN THẢO TRANG ĐỌC</span>
-  </div>
+                {/* KHUNG QUY ĐỊNH & HƯỚNG DẪN ĐĂNG TẢI TÁC PHẨM */}
+                <div
+                    style={{
+                        background: darkMode ? 'rgba(99, 102, 241, 0.08)' : '#f8faff',
+                        border: `1px solid ${darkMode ? '#3730a3' : '#c7d2fe'}`,
+                        borderRadius: '12px',
+                        padding: '16px 18px',
+                        marginTop: '18px',
+                        marginBottom: '10px',
+                    }}
+                >
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            color: '#4f46e5',
+                            fontWeight: '800',
+                            fontSize: '14px',
+                            marginBottom: '10px',
+                        }}
+                    >
+                        <i className="fa-solid fa-circle-info" style={{ fontSize: '16px' }}></i>
+                        <span>QUY ĐỊNH ĐĂNG TẢI & HƯỚNG DẪN SOẠN THẢO TRANG ĐỌC</span>
+                    </div>
 
-  <ul
-    style={{
-      margin: 0,
-      paddingLeft: '20px',
-      fontSize: '13px',
-      lineHeight: '1.7',
-      color: darkMode ? '#cbd5e1' : '#334155',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '6px',
-    }}
-  >
-    <li>
-      <strong>Quy cách ngắt trang (Trình đọc sách):</strong> Để nội dung chương được phân tách chính xác theo từng trang, hãy gõ 3 dấu gạch ngang (
-      <code
-        style={{
-          background: darkMode ? '#334155' : '#e0e7ff',
-          color: '#4f46e5',
-          padding: '2px 6px',
-          borderRadius: '4px',
-          fontWeight: '700',
-        }}
-      >
-        ---
-      </code>
-      ) trên một dòng riêng biệt ở mỗi điểm kết thúc trang. Hệ thống đọc sách sẽ căn cứ vào ký hiệu này để lật trang.
-    </li>
+                    <ul
+                        style={{
+                            margin: 0,
+                            paddingLeft: '20px',
+                            fontSize: '13px',
+                            lineHeight: '1.7',
+                            color: darkMode ? '#cbd5e1' : '#334155',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '6px',
+                        }}
+                    >
+                        <li>
+                            <strong>Quy cách ngắt trang (Trình đọc sách):</strong> Để nội dung chương được phân tách chính xác theo từng trang, hãy gõ 3 dấu gạch ngang (
+                            <code
+                                style={{
+                                    background: darkMode ? '#334155' : '#e0e7ff',
+                                    color: '#4f46e5',
+                                    padding: '2px 6px',
+                                    borderRadius: '4px',
+                                    fontWeight: '700',
+                                }}
+                            >
+                                ---
+                            </code>
+                            ) trên một dòng riêng biệt ở mỗi điểm kết thúc trang. Hệ thống đọc sách sẽ căn cứ vào ký hiệu này để lật trang.
+                        </li>
 
-    <li>
-      <strong>Chính sách phê duyệt:</strong> Mọi tác phẩm đóng góp từ độc giả sẽ ở trạng thái{' '}
-      <span
-        style={{
-          background: '#fef3c7',
-          color: '#d97706',
-          padding: '2px 6px',
-          borderRadius: '4px',
-          fontWeight: '700',
-          fontSize: '12px',
-        }}
-      >
-        CHỜ DUYỆT
-      </span>
-      . Quản trị viên sẽ kiểm tra nội dung và bản quyền trước khi kích hoạt hiển thị công khai trên hệ thống Thư viện.
-    </li>
+                        <li>
+                            <strong>Chính sách phê duyệt:</strong> Mọi tác phẩm đóng góp từ độc giả sẽ ở trạng thái{' '}
+                            <span
+                                style={{
+                                    background: '#fef3c7',
+                                    color: '#d97706',
+                                    padding: '2px 6px',
+                                    borderRadius: '4px',
+                                    fontWeight: '700',
+                                    fontSize: '12px',
+                                }}
+                            >
+                                CHỜ DUYỆT
+                            </span>
+                            . Quản trị viên sẽ kiểm tra nội dung và bản quyền trước khi kích hoạt hiển thị công khai trên hệ thống Thư viện.
+                        </li>
 
-    <li>
-      <strong>Tiêu chuẩn nội dung:</strong> Không đăng tải tác phẩm vi phạm bản quyền, nội dung bạo lực, phản cảm hoặc chứa liên kết độc hại.
-    </li>
-    <li>
-      <strong>Đồng bộ Số trang & Nội dung:</strong> Nếu bạn thiết lập <em>Tổng Số  Trang</em>   lớn hơn số lượng trang văn bản thực tế soạn thảo, các trang chưa có nội dung sẽ tự động hiển thị thông báo <em>"Nội dung đang được biên soạn thêm"</em> khi độc giả lật tới. Hãy đảm bảo bổ sung đủ các đoạn ngắt trang (<code>---</code>) tương ứng với tổng số trang dự kiến.
-    </li>
-  </ul>
-</div>
+                        <li>
+                            <strong>Tiêu chuẩn nội dung:</strong> Không đăng tải tác phẩm vi phạm bản quyền, nội dung bạo lực, phản cảm hoặc chứa liên kết độc hại.
+                        </li>
+                        <li>
+                            <strong>Đồng bộ Số trang & Nội dung:</strong> Nếu bạn thiết lập <em>Tổng Số  Trang</em>   lớn hơn số lượng trang văn bản thực tế soạn thảo, các trang chưa có nội dung sẽ tự động hiển thị thông báo <em>"Nội dung đang được biên soạn thêm"</em> khi độc giả lật tới. Hãy đảm bảo bổ sung đủ các đoạn ngắt trang (<code>---</code>) tương ứng với tổng số trang dự kiến.
+                        </li>
+                    </ul>
+                </div>
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     <div>
                         <label style={{ fontSize: '12px', fontWeight: '700' }}>Tên Sách / Tác Phẩm *</label>
@@ -218,15 +226,32 @@ export default function ContributeModal({ isOpen, onClose, currentUser, darkMode
                                 style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', marginTop: '4px' }}
                             />
                         </div>
+                        {/* ĐOẠN MỚI DẠNG XỔ XUỐNG */}
                         <div>
-                            <label style={{ fontSize: '12px', fontWeight: '700' }}>Thể Loại (phân tách bởi dấu phẩy)</label>
-                            <input
-                                type="text"
+                            <label style={{ fontSize: '12px', fontWeight: '700' }}>Thể Loại *</label>
+                            <select
                                 value={formData.categories}
                                 onChange={(e) => setFormData({ ...formData, categories: e.target.value })}
-                                placeholder="Khoa học máy tính, Lập trình..."
-                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', marginTop: '4px' }}
-                            />
+                                style={{
+                                    width: '100%',
+                                    padding: '10px 12px',
+                                    borderRadius: '8px',
+                                    border: `1px solid ${darkMode ? '#475569' : '#cbd5e1'}`,
+                                    background: darkMode ? '#0f172a' : '#ffffff',
+                                    color: darkMode ? '#f8fafc' : '#0f172a',
+                                    marginTop: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '13px',
+                                    fontWeight: '500',
+                                    outline: 'none',
+                                }}
+                            >
+                                {AVAILABLE_CATEGORIES.map((cat) => (
+                                    <option key={cat} value={cat}>
+                                        {cat}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                     </div>
 
@@ -335,7 +360,7 @@ export default function ContributeModal({ isOpen, onClose, currentUser, darkMode
                         </div>
                     </div>
 
-                  
+
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
                         <button
