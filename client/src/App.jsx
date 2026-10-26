@@ -26,12 +26,14 @@ export default function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [statsData, setStatsData] = useState(null);
 
-  // Quản lý người dùng
+  // Quản lý người dùng: Mặc định là null nếu chưa đăng nhập
   const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('lib_user');
-    return saved
-      ? JSON.parse(saved)
-      : { _id: "660c1a2b3c4d5e6f7a8b9c99", full_name: "Lê Trương Huy", role: "admin" };
+    try {
+      const saved = localStorage.getItem('lib_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
   });
 
   const fetchStats = async () => {
@@ -81,9 +83,9 @@ export default function App() {
       fetchRecentHistory(currentUser._id);
       fetchCompletedBookIds(currentUser._id);
     } else {
-      // 👉 THÊM VÀO ĐÂY: Reset sạch danh sách khi đã đăng xuất
-      setRecentHistory([]); 
-      setCompletedBookIds([]); 
+
+      setRecentBooks([]);
+      setCompletedBookIds([]);
     }
   }, [currentUser]);
 
@@ -392,7 +394,7 @@ export default function App() {
             {currentUser && recentBooks && recentBooks.length > 0 && (
               <RecentHistory
                 books={recentBooks}
-                onSelectBook={handleSelectBook}
+                onSelectBook={openBook}
                 darkMode={darkMode}
               />
             )}
