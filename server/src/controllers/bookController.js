@@ -116,23 +116,36 @@ exports.getAllBooks = async (req, res) => {
 exports.getMyContributedBooks = async (req, res) => {
   try {
     const { userId } = req.params;
+    const { userName } = req.query;
 
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ success: false, message: 'ID người dùng không hợp lệ' });
+    const conditions = [];
+
+    // Tìm theo created_by nếu userId hợp lệ
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      conditions.push({ created_by: userId });
     }
 
-    // Tìm tất cả sách có created_by khớp với userId
-    const books = await Book.find({ created_by: userId })
-      .select('title author categories cover_image is_published total_chapters createdAt')
+    // Dự phòng tìm theo uploader_name hoặc author.name
+    if (userName && userName.trim() !== '') {
+      conditions.push({ uploader_name: userName.trim() });
+      conditions.push({ 'author.name': userName.trim() });
+    }
+
+    if (conditions.length === 0) {
+      return res.status(200).json({ success: true, total: 0, data: [] });
+    }
+
+    const books = await Book.find({ $or: conditions })
+      .select('title author categories cover_image is_published total_chapters chapters description createdAt')
       .sort({ createdAt: -1 });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       total: books.length,
       data: books,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 // 3. ĐỘC GIẢ ĐÓNG GÓP / ĐĂNG TẢI SÁCH MỚI (Mặc định is_published: false)

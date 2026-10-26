@@ -41,7 +41,7 @@ const requireAdmin = async (req, res, next) => {
     });
   }
 };
-
+router.get('/my-contributions/:userId', bookController.getMyContributedBooks);
 // 1. Quản lý danh sách và tạo sách mới
 router.route('/')
   .get(getAllBooks)
@@ -63,5 +63,5 @@ router.route('/:id')
 router.post('/:bookId/chapters', requireAdmin, addChapter);
 router.get('/:bookId/chapters/:chapterNumber', getChapterContent);
 
-router.get('/my-contributions/:userId', bookController.getMyContributedBooks);
+
 module.exports = router;
