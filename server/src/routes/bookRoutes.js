@@ -11,7 +11,7 @@ const {
   deleteBook,
   getLibraryStats,
   contributeBook,
-  getMyContributedBooks, // 1. BẮT BUỘC CÓ DÒNG NÀY Ở ĐÂY
+  getMyContributedBooks,
 } = require('../controllers/bookController');
 
 // Middleware xác thực quyền Admin
@@ -48,17 +48,17 @@ router.route('/')
   .get(getAllBooks)
   .post(requireAdmin, createBook);
 
-// 2. ROUTE SÁCH CỦA TÔI: Bỏ chữ "bookController." đi, gọi trực tiếp tên hàm
-router.get('/my-contributions/:userId', getMyContributedBooks);
-
-// 3. Thống kê thư viện
+// 2. Thống kê thư viện (Route tĩnh - phải đặt trước /:id)
 router.get('/stats', getLibraryStats);
 router.get('/statistics', getBookStatistics);
 
-// 4. Độc giả đóng góp sách mới
+// 3. Độc giả đóng góp sách mới (Route tĩnh - phải đặt trước /:id)
 router.post('/contribute', contributeBook);
 
-// 5. Chi tiết sách và xóa sách
+// 👉 4. SÁCH CỦA TÔI (BẮT BUỘC ĐẶT TRƯỚC /:id NẾU KHÔNG SẼ BỊ LỖI 403 / 404):
+router.get('/my-contributions/:userId', getMyContributedBooks);
+
+// 5. Chi tiết sách và xóa sách (ROUTE CÓ PARAM ĐỘNG /:id PHẢI ĐẶT SAU CÙNG)
 router.route('/:id')
   .get(getBookById)
   .delete(requireAdmin, deleteBook);
