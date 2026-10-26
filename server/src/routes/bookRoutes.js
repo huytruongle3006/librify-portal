@@ -41,12 +41,12 @@ const requireAdmin = async (req, res, next) => {
     });
   }
 };
-router.get('/my-contributions/:userId', bookController.getMyContributedBooks);
+
 // 1. Quản lý danh sách và tạo sách mới
 router.route('/')
   .get(getAllBooks)
   .post(requireAdmin, createBook);
-
+router.get('/my-contributions/:userId', bookController.getMyContributedBooks);
 // 2. Thống kê thư viện
 router.get('/stats', getLibraryStats);
 router.get('/statistics', getBookStatistics);

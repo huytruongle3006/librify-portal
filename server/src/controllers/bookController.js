@@ -120,12 +120,10 @@ exports.getMyContributedBooks = async (req, res) => {
 
     const conditions = [];
 
-    // Tìm theo created_by nếu userId hợp lệ
     if (userId && mongoose.Types.ObjectId.isValid(userId)) {
       conditions.push({ created_by: userId });
     }
 
-    // Dự phòng tìm theo uploader_name hoặc author.name
     if (userName && userName.trim() !== '') {
       conditions.push({ uploader_name: userName.trim() });
       conditions.push({ 'author.name': userName.trim() });
