@@ -350,7 +350,7 @@ exports.getAdminBooks = async (req, res) => {
   try {
     // Không lọc is_published, lấy toàn bộ
     const books = await Book.find({})
-      .select('-chapters.content')
+     
       .sort({ createdAt: -1 }); // Sách vừa đăng sẽ nằm ngay đầu bảng
 
     res.status(200).json({

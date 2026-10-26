@@ -95,7 +95,7 @@ exports.getAllBooks = async (req, res) => {
     }
 
     const books = await Book.find(filter)
-      .select('-chapters.content')
+
       .skip(all === 'true' ? 0 : (page - 1) * Number(limit))
       .limit(all === 'true' ? 0 : Number(limit))
       .sort({ createdAt: -1 });
