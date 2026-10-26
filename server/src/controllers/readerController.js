@@ -99,7 +99,7 @@ exports.saveReadingProgress = async (req, res) => {
   }
 };
 
-// 2. Lấy danh sách 5 cuốn sách vừa đọc gần nhất từ Redis List
+// 2. Lấy danh sách 5 cuốn sách vừa đọc gần nhất từ Redis List (ĐÃ SỬA: Chỉ lấy sách đã duyệt)
 exports.getRecentHistory = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -110,9 +110,13 @@ exports.getRecentHistory = async (req, res) => {
       return res.status(200).json({ success: true, data: [] });
     }
 
-    const books = await Book.find({ _id: { $in: bookIds } }).select('title cover_image author categories');
+    // CHỈ LẤY những cuốn có is_published: true
+    const books = await Book.find({ 
+      _id: { $in: bookIds },
+      is_published: true 
+    }).select('title cover_image author categories');
 
-    // Giữ nguyên thứ tự đọc gần nhất theo Redis List
+    // Giữ nguyên thứ tự đọc gần nhất theo Redis List, loại bỏ sách chưa duyệt/đã ẩn
     const result = bookIds
       .map((id) => books.find((b) => b._id.toString() === id))
       .filter(Boolean);
@@ -274,6 +278,7 @@ exports.getCompletedBookIds = async (req, res) => {
 };
 
 // 5. Lấy Top 10 Bảng xếp hạng thịnh hành (Redis Sorted Set)
+// 5. Lấy Top 10 Bảng xếp hạng thịnh hành (Redis Sorted Set) (ĐÃ SỬA: Chỉ lấy sách đã duyệt)
 exports.getTrendingBooks = async (req, res) => {
   try {
     const trendingKey = 'leaderboard:books:trending';
@@ -283,7 +288,6 @@ exports.getTrendingBooks = async (req, res) => {
     try {
       topEntries = await redisClient.zRangeWithScores(trendingKey, 0, 9, { REV: true });
     } catch (e) {
-      // Dự phòng nếu thư viện dùng sendCommand
       const raw = await redisClient.sendCommand(['ZREVRANGE', trendingKey, '0', '9', 'WITHSCORES']);
       if (Array.isArray(raw)) {
         for (let i = 0; i < raw.length; i += 2) {
@@ -299,8 +303,11 @@ exports.getTrendingBooks = async (req, res) => {
     // 2. Lấy danh sách ID
     const bookIds = topEntries.map((item) => item.value).filter(Boolean);
 
-    // 3. Tìm sách trong MongoDB Atlas
-    const books = await Book.find({ _id: { $in: bookIds } })
+    // 3. Tìm sách trong MongoDB Atlas (CHỈ LẤY SÁCH ĐÃ DUYỆT)
+    const books = await Book.find({ 
+      _id: { $in: bookIds },
+      is_published: true 
+    })
       .select('title cover_image author categories')
       .lean();
 
@@ -308,7 +315,7 @@ exports.getTrendingBooks = async (req, res) => {
     const result = topEntries
       .map((item) => {
         const b = books.find((x) => x._id.toString() === item.value);
-        if (!b) return null;
+        if (!b) return null; // Nếu sách bị ẩn hoặc chưa duyệt, bỏ qua
 
         const authorName = typeof b.author === 'string'
           ? b.author

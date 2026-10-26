@@ -95,13 +95,14 @@ const bookCovers = [
 
 async function seedRealBooks() {
     try {
-        const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/digital_library';
+        // Trỏ trực tiếp và bắt buộc vào cụm MongoDB Atlas DoAn_NoSQL
+       const mongoUri = "mongodb://lehuy014753_db_user:Cp0Fjpj0xkuMGXjf@ac-hqanh7z-shard-00-00.ww6jayh.mongodb.net:27017,ac-hqanh7z-shard-00-01.ww6jayh.mongodb.net:27017,ac-hqanh7z-shard-00-02.ww6jayh.mongodb.net:27017/DoAn_NoSQL?ssl=true&replicaSet=atlas-enaiii-shard-0&authSource=admin&retryWrites=true&w=majority";
         await mongoose.connect(mongoUri);
-        console.log('MongoDB Connected...');
+        console.log('MongoDB Atlas Connected thành công...');
 
-        // Xóa sách cũ
+        // Xóa sách cũ trên Atlas
         await Book.deleteMany({});
-        console.log('Đã làm sạch kho sách cũ...');
+        console.log('Đã làm sạch kho sách cũ trên Atlas...');
 
         // Chuẩn bị dữ liệu 60 sách
         const booksToInsert = realCatalog.map((item, index) => {
@@ -166,7 +167,7 @@ async function seedRealBooks() {
         });
 
         await Book.insertMany(booksToInsert);
-        console.log(`Đã nạp thành công ${booksToInsert.length} đầu sách thực tế 100% vào MongoDB!`);
+        console.log(`Đã nạp thành công ${booksToInsert.length} đầu sách thực tế 100% vào MongoDB Atlas!`);
 
         process.exit(0);
     } catch (error) {
@@ -176,3 +177,4 @@ async function seedRealBooks() {
 }
 
 seedRealBooks();
+

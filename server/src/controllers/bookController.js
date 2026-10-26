@@ -200,39 +200,7 @@ exports.contributeBook = async (req, res) => {
   }
 };
 // Chi tiết sách áp dụng Cache-Aside Pattern (Redis String + TTL 15 phút)
-exports.getBookById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const cacheKey = `cache:book:${id}`;
 
-    // 1. Kiểm tra trên Redis trước (Cache Hit)
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {
-      return res.status(200).json({
-        success: true,
-        source: 'Redis Cache (In-Memory)',
-        data: JSON.parse(cachedData),
-      });
-    }
-
-    // 2. Cache Miss: Truy vấn MongoDB (LẤY ĐẦY ĐỦ CONTENT ĐỂ ĐỌC VÀ XEM TRƯỚC)
-    const book = await Book.findById(id); // ĐÃ XÓA .select('-chapters.content')
-    if (!book) {
-      return res.status(404).json({ success: false, message: 'Không tìm thấy sách' });
-    }
-
-    // 3. Ghi dữ liệu vào Redis Cache với TTL = 900 giây (15 phút)
-    await redisClient.setEx(cacheKey, 900, JSON.stringify(book));
-
-    res.status(200).json({
-      success: true,
-      source: 'MongoDB Database (Disk)',
-      data: book,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
 // Thống kê nâng cao bằng MongoDB Aggregation Pipeline
 exports.getBookStatistics = async (req, res) => {
   try {
@@ -306,6 +274,53 @@ exports.addChapter = async (req, res) => {
   }
 };
 
+
+// Chi tiết sách áp dụng Cache-Aside Pattern (ĐÃ SỬA: Kiểm tra quyền và trạng thái duyệt)
+exports.getBookById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const cacheKey = `cache:book:${id}`;
+
+    // 1. Cache Hit
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      const parsedBook = JSON.parse(cachedData);
+      // Nếu sách trong cache bị tắt is_published và người xem không phải admin
+      if (!parsedBook.is_published && (!req.user || req.user.role !== 'admin')) {
+        return res.status(403).json({ success: false, message: 'Tác phẩm này đang chờ duyệt hoặc đã bị ẩn!' });
+      }
+      return res.status(200).json({
+        success: true,
+        source: 'Redis Cache (In-Memory)',
+        data: parsedBook,
+      });
+    }
+
+    // 2. Cache Miss: Truy vấn MongoDB
+    const book = await Book.findById(id);
+    if (!book) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy sách' });
+    }
+
+    // Kiểm tra trạng thái xuất bản
+    if (!book.is_published && (!req.user || req.user.role !== 'admin')) {
+      return res.status(403).json({ success: false, message: 'Tác phẩm này đang chờ duyệt hoặc đã bị ẩn!' });
+    }
+
+    // 3. Ghi dữ liệu vào Redis Cache
+    await redisClient.setEx(cacheKey, 900, JSON.stringify(book));
+
+    res.status(200).json({
+      success: true,
+      source: 'MongoDB Database (Disk)',
+      data: book,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Đọc nội dung chương (ĐÃ SỬA: Chặn đọc chương nếu sách chưa duyệt)
 exports.getChapterContent = async (req, res) => {
   try {
     const { bookId, chapterNumber } = req.params;
@@ -315,8 +330,12 @@ exports.getChapterContent = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Không tìm thấy sách hoặc chương' });
     }
 
+    // Chặn người dùng đọc nội dung nếu sách chưa được duyệt
+    if (!book.is_published && (!req.user || req.user.role !== 'admin')) {
+      return res.status(403).json({ success: false, message: 'Tác phẩm này đang chờ duyệt hoặc đã bị ẩn!' });
+    }
+
     const chapNum = Number(chapterNumber);
-    // Tìm theo chapter_number hoặc lấy theo thứ tự index trong mảng
     let chapter = book.chapters.find((c) => Number(c.chapter_number) === chapNum);
     if (!chapter && book.chapters[chapNum - 1]) {
       chapter = book.chapters[chapNum - 1];
@@ -329,13 +348,12 @@ exports.getChapterContent = async (req, res) => {
     res.status(200).json({
       success: true,
       book_title: book.title,
-      chapter: chapter, // Trả về đầy đủ content đã nhập
+      chapter: chapter,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 exports.deleteBook = async (req, res) => {
   try {
     const { id } = req.params;

@@ -327,6 +327,14 @@ exports.togglePublishBook = async (req, res) => {
     book.is_published = !book.is_published;
     await book.save();
 
+    // 1. Luôn xóa Cache-Aside chi tiết sách để đảm bảo tính nhất quán dữ liệu (Cache Invalidation)
+    await redisClient.del(`cache:book:${id}`);
+
+    // 2. Nếu chuyển sang Ẩn / Chờ duyệt (!book.is_published), lập tức rút sách ra khỏi Bảng xếp hạng Trending
+    if (!book.is_published) {
+      await redisClient.zRem('leaderboard:books:trending', String(id));
+    }
+
     res.status(200).json({ 
       success: true, 
       message: book.is_published ? 'Đã duyệt xuất bản sách!' : 'Đã ẩn sách khỏi trang chủ', 
