@@ -55,7 +55,7 @@ exports.addReview = async (req, res) => {
   }
 };
 
-// 2. Lấy danh sách bình luận kèm thống kê sao của một cuốn sách
+// 2. Lấy danh sách bình luận kèm thống kê sao của một cuốn sách (CHỈ LẤY BÌNH LUẬN ĐÃ DUYỆT / KHÔNG BỊ ẨN)
 exports.getReviewsByBook = async (req, res) => {
   try {
     const { bookId } = req.params;
@@ -68,14 +68,21 @@ exports.getReviewsByBook = async (req, res) => {
       });
     }
 
-    // Lấy danh sách bình luận sắp xếp mới nhất theo created_at
-    const reviews = await Review.find({ book_id: bookId })
+    // 👉 1. Chỉ tìm những đánh giá có trạng thái approved (hoặc không phải hidden)
+    const filter = {
+      book_id: new mongoose.Types.ObjectId(bookId),
+      status: { $ne: 'hidden' }
+    };
+
+    const reviews = await Review.find(filter)
       .populate('user_id', 'full_name username role')
       .sort({ created_at: -1 });
 
-    // Sử dụng MongoDB Aggregation để tính điểm trung bình sao
+    // 👉 2. Thống kê điểm trung bình sao cũng chỉ tính trên các đánh giá hiển thị
     const stats = await Review.aggregate([
-      { $match: { book_id: new mongoose.Types.ObjectId(bookId) } },
+      { 
+        $match: filter 
+      },
       {
         $group: {
           _id: '$book_id',
