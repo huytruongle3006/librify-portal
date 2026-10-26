@@ -16,7 +16,11 @@ const app = express();
 const cors = require('cors');
 
 app.use(cors({
-  origin: '*', // Cho phép tất cả các domain hoặc điền 'https://librify-portal.vercel.app'
+  origin: [
+    'https://librify-portal.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:5173'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
 }));
