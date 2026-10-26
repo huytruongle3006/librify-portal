@@ -15,11 +15,20 @@ const app = express();
 
 // Cấu hình CORS chuẩn cho Vercel và Localhost
 app.use(cors({
-  origin: [
-    'https://librify-portal.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:5173'
-  ],
+  origin: function (origin, callback) {
+    // Cho phép gọi không có origin (như Postman/mobile apps)
+    if (!origin) return callback(null, true);
+    
+    // Cho phép localhost hoặc bất kỳ domain nào kết thúc bằng .vercel.app
+    if (
+      origin.includes('localhost') || 
+      origin.endsWith('.vercel.app')
+    ) {
+      return callback(null, true);
+    }
+    
+    return callback(new Error('Chặn bởi CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
 }));
@@ -35,8 +44,8 @@ app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/favorites', require('./routes/favoriteRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
 
-app.get('/', (req, res) => {
-  res.send('API Hệ Thống Thư Viện Số - Polyglot Persistence Active');
+  app.get('/', (req, res) => {
+    res.send('API Hệ Thống Thư Viện Số - Polyglot Persistence Active');
 });
 
 const PORT = process.env.PORT || 5000;
