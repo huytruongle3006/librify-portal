@@ -188,9 +188,10 @@ export default function BookReviews({ bookId, currentUser, darkMode }) {
                     <span style={{ fontSize: '13px', fontWeight: '700', color: darkMode ? '#f8fafc' : '#0f172a' }}>
                       {rev.user_id?.full_name || rev.user_id?.username || 'Độc giả ẩn danh'}
                     </span>
-                    <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '8px' }}>
-                      {new Date(rev.createdAt).toLocaleDateString('vi-VN')}
-                    </span>
+                  {/* DÒNG MỚI: Hỗ trợ cả created_at và createdAt */}
+<span style={{ fontSize: '11px', color: '#64748b', marginLeft: '8px' }}>
+  {new Date(rev.created_at || rev.createdAt || Date.now()).toLocaleDateString('vi-VN')}
+</span>
                   </div>
                 </div>
 
