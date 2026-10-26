@@ -11,6 +11,7 @@ const {
   deleteBook,
   getLibraryStats,
   contributeBook, // Import thêm hàm này trực tiếp
+  getMyContributedBooks,
 } = require('../controllers/bookController');
 
 // Middleware xác thực quyền Admin từ MongoDB hoặc Header
