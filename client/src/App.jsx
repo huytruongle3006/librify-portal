@@ -391,13 +391,13 @@ export default function App() {
           )
         ) : viewMode === 'portal' ? (
           <div>
-            {currentUser && recentBooks && recentBooks.length > 0 && (
-              <RecentHistory
-                books={recentBooks}
-                onSelectBook={openBook}
-                darkMode={darkMode}
-              />
-            )}
+        {currentUser && recentBooks && recentBooks.length > 0 && (
+  <RecentHistory
+    recentBooks={recentBooks}
+    onOpenBook={openBook}
+    darkMode={darkMode}
+  />
+)}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 340px', gap: '32px' }}>
               <div style={{ minWidth: 0 }}>
