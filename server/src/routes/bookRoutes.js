@@ -11,10 +11,10 @@ const {
   deleteBook,
   getLibraryStats,
   contributeBook,
-  getMyContributedBooks, // ĐÃ BỔ SUNG IMPORT HÀM NÀY
+  getMyContributedBooks, // 1. BẮT BUỘC CÓ DÒNG NÀY Ở ĐÂY
 } = require('../controllers/bookController');
 
-// Middleware xác thực quyền Admin từ MongoDB hoặc Header
+// Middleware xác thực quyền Admin
 const requireAdmin = async (req, res, next) => {
   try {
     const userId = req.headers['x-user-id'] || req.body?.userId || req.query?.userId;
@@ -48,14 +48,14 @@ router.route('/')
   .get(getAllBooks)
   .post(requireAdmin, createBook);
 
-// 2. Route lấy sách do chính người dùng đóng góp (gọi trực tiếp getMyContributedBooks)
+// 2. ROUTE SÁCH CỦA TÔI: Bỏ chữ "bookController." đi, gọi trực tiếp tên hàm
 router.get('/my-contributions/:userId', getMyContributedBooks);
 
 // 3. Thống kê thư viện
 router.get('/stats', getLibraryStats);
 router.get('/statistics', getBookStatistics);
 
-// 4. Độc giả đóng góp / đăng tải sách mới (NẰM TRÊN ROUTE /:id)
+// 4. Độc giả đóng góp sách mới
 router.post('/contribute', contributeBook);
 
 // 5. Chi tiết sách và xóa sách
