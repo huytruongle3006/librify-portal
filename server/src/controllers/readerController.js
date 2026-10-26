@@ -1,7 +1,7 @@
 const { redisClient } = require('../config/redis');
 const Book = require('../models/Book');
 const User = require('../models/User');
-
+const mongoose = require('mongoose');
 
 // Đánh dấu sách đã đọc xong (Đồng bộ đồng thời Redis Set & MongoDB Array)
 // Thêm 3 hàm này vào server/src/controllers/readerController.js:
