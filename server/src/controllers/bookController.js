@@ -112,6 +112,29 @@ exports.getAllBooks = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+// Lấy danh sách tất cả sách do chính user này đăng (cả đã duyệt lẫn chờ duyệt)
+exports.getMyContributedBooks = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: 'ID người dùng không hợp lệ' });
+    }
+
+    // Tìm tất cả sách có created_by khớp với userId
+    const books = await Book.find({ created_by: userId })
+      .select('title author categories cover_image is_published total_chapters createdAt')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      total: books.length,
+      data: books,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 // 3. ĐỘC GIẢ ĐÓNG GÓP / ĐĂNG TẢI SÁCH MỚI (Mặc định is_published: false)
 // Độc giả đóng góp / tải sách lên
 exports.contributeBook = async (req, res) => {
@@ -279,16 +302,38 @@ exports.addChapter = async (req, res) => {
 exports.getBookById = async (req, res) => {
   try {
     const { id } = req.params;
+    // Hỗ trợ lấy thông tin người dùng từ token (req.user) hoặc qua query params (?userId=...)
+    const currentUserId = req.user?.id || req.user?._id || req.query?.userId;
+    const currentUserRole = req.user?.role || req.query?.role;
+    const currentUserName = req.user?.name || req.query?.userName;
+
     const cacheKey = `cache:book:${id}`;
 
-    // 1. Cache Hit
+    // Hàm phụ kiểm tra quyền xem sách chưa xuất bản
+    const canAccessUnpublished = (bookData) => {
+      if (currentUserRole === 'admin') return true;
+      if (currentUserId && bookData.created_by && String(bookData.created_by) === String(currentUserId)) {
+        return true;
+      }
+      if (currentUserName && bookData.uploader_name && bookData.uploader_name === currentUserName) {
+        return true;
+      }
+      return false;
+    };
+
+    // 1. Cache Hit từ Redis
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
       const parsedBook = JSON.parse(cachedData);
-      // Nếu sách trong cache bị tắt is_published và người xem không phải admin
-      if (!parsedBook.is_published && (!req.user || req.user.role !== 'admin')) {
-        return res.status(403).json({ success: false, message: 'Tác phẩm này đang chờ duyệt hoặc đã bị ẩn!' });
+
+      // Nếu sách chưa xuất bản và không phải Admin / không phải chính tác giả đăng sách
+      if (!parsedBook.is_published && !canAccessUnpublished(parsedBook)) {
+        return res.status(403).json({ 
+          success: false, 
+          message: 'Tác phẩm này đang chờ duyệt hoặc đã bị ẩn!' 
+        });
       }
+
       return res.status(200).json({
         success: true,
         source: 'Redis Cache (In-Memory)',
@@ -302,21 +347,24 @@ exports.getBookById = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Không tìm thấy sách' });
     }
 
-    // Kiểm tra trạng thái xuất bản
-    if (!book.is_published && (!req.user || req.user.role !== 'admin')) {
-      return res.status(403).json({ success: false, message: 'Tác phẩm này đang chờ duyệt hoặc đã bị ẩn!' });
+    // Kiểm tra quyền đối với sách chưa xuất bản từ MongoDB
+    if (!book.is_published && !canAccessUnpublished(book)) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Tác phẩm này đang chờ duyệt hoặc đã bị ẩn!' 
+      });
     }
 
-    // 3. Ghi dữ liệu vào Redis Cache
+    // 3. Ghi dữ liệu vào Redis Cache (TTL = 15 phút)
     await redisClient.setEx(cacheKey, 900, JSON.stringify(book));
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       source: 'MongoDB Database (Disk)',
       data: book,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 

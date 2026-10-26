@@ -63,4 +63,5 @@ router.route('/:id')
 router.post('/:bookId/chapters', requireAdmin, addChapter);
 router.get('/:bookId/chapters/:chapterNumber', getChapterContent);
 
+router.get('/my-contributions/:userId', bookController.getMyContributedBooks);
 module.exports = router;
