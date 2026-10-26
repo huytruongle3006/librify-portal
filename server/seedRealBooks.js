@@ -1,6 +1,6 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const Book = require('../src/models/Book');
+const Book = require('./src/models/Book');
 
 // 60 tác phẩm kinh điển có thật 100% trong ngành CNTT & Khoa học
 const realCatalog = [

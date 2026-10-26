@@ -62,7 +62,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
   const fetchBooks = async () => {
     try {
       // Gọi API của admin thay vì api chung của độc giả
-      const res = await axios.get('http://localhost:5000/api/books?all=true');
+      const res = await axios.get('https://librify-backend.onrender.com/api/books?all=true');
       if (res.data?.success) {
         setBooks(res.data.data);
       }
@@ -73,7 +73,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/admin/users');
+      const res = await axios.get('https://librify-backend.onrender.com/api/admin/users');
       if (res.data?.success) setUsers(res.data.data);
     } catch (err) {
       console.error(err);
@@ -82,7 +82,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/admin/categories');
+      const res = await axios.get('https://librify-backend.onrender.com/api/admin/categories');
       if (res.data?.success) setCategories(res.data.data);
     } catch (err) {
       console.error(err);
@@ -91,7 +91,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
 
   const fetchReviews = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/admin/reviews');
+      const res = await axios.get('https://librify-backend.onrender.com/api/admin/reviews');
       if (res.data?.success) setReviews(res.data.data);
     } catch (err) {
       console.error(err);
@@ -100,7 +100,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
 
   const fetchTrending = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/reader/trending');
+      const res = await axios.get('https://librify-backend.onrender.com/api/reader/trending');
       if (res.data?.success) setTrending(res.data.data);
     } catch (err) {
       console.error(err);
@@ -127,7 +127,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
         ],
       };
 
-      const res = await axios.post('http://localhost:5000/api/books', payload, {
+      const res = await axios.post('https://librify-backend.onrender.com/api/books', payload, {
         headers: { 'x-user-role': currentUser?.role || 'admin' },
       });
 
@@ -150,7 +150,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
     e.preventDefault();
     if (!selectedBookForEdit) return;
     try {
-      await axios.put(`http://localhost:5000/api/admin/books/${selectedBookForEdit._id}`, selectedBookForEdit);
+      await axios.put(`https://librify-backend.onrender.com/api/admin/books/${selectedBookForEdit._id}`, selectedBookForEdit);
       setIsEditBookOpen(false);
       setSelectedBookForEdit(null);
       fetchBooks();
@@ -163,7 +163,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
   const handleDeleteBook = async (bookId) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa tác phẩm này khỏi hệ thống?')) return;
     try {
-      const res = await axios.delete(`http://localhost:5000/api/books/${bookId}`, {
+      const res = await axios.delete(`https://librify-backend.onrender.com/api/books/${bookId}`, {
         headers: { 'x-user-role': currentUser?.role || 'admin' }
       });
       if (res.data?.success) {
@@ -180,7 +180,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
     if (!selectedBookForChapter) return;
     try {
       const res = await axios.post(
-        `http://localhost:5000/api/books/${selectedBookForChapter._id}/chapters`,
+        `https://librify-backend.onrender.com/api/books/${selectedBookForChapter._id}/chapters`,
         chapterForm,
         { headers: { 'x-user-role': currentUser?.role || 'admin' } }
       );
@@ -200,9 +200,9 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
     e.preventDefault();
     try {
       if (editingUser) {
-        await axios.put(`http://localhost:5000/api/admin/users/${editingUser._id}`, userForm);
+        await axios.put(`https://librify-backend.onrender.com/api/admin/users/${editingUser._id}`, userForm);
       } else {
-        await axios.post('http://localhost:5000/api/admin/users', userForm);
+        await axios.post('https://librify-backend.onrender.com/api/admin/users', userForm);
       }
       setIsUserModalOpen(false);
       setEditingUser(null);
@@ -216,7 +216,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
   const handleToggleRole = async (userId, currentRole) => {
     const nextRole = currentRole === 'admin' ? 'reader' : 'admin';
     try {
-      const res = await axios.patch(`http://localhost:5000/api/admin/users/${userId}/role`, { role: nextRole });
+      const res = await axios.patch(`https://librify-backend.onrender.com/api/admin/users/${userId}/role`, { role: nextRole });
       if (res.data?.success) {
         setUsers(prev => prev.map(u => (u._id === userId ? { ...u, role: nextRole } : u)));
       }
@@ -227,7 +227,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
 
   const handleToggleStatus = async (userId) => {
     try {
-      const res = await axios.patch(`http://localhost:5000/api/admin/users/${userId}/status`);
+      const res = await axios.patch(`https://librify-backend.onrender.com/api/admin/users/${userId}/status`);
       if (res.data?.success) {
         setUsers(prev => prev.map(u => (u._id === userId ? res.data.data : u)));
       }
@@ -239,7 +239,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
   const handleDeleteUser = async (id) => {
     if (!window.confirm('Xác nhận xóa tài khoản người dùng này?')) return;
     try {
-      await axios.delete(`http://localhost:5000/api/admin/users/${id}`);
+      await axios.delete(`https://librify-backend.onrender.com/api/admin/users/${id}`);
       fetchUsers();
     } catch (err) {
       alert('Lỗi xóa người dùng');
@@ -251,9 +251,9 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
     e.preventDefault();
     try {
       if (editingCategory) {
-        await axios.put(`http://localhost:5000/api/admin/categories/${editingCategory._id}`, catForm);
+        await axios.put(`https://librify-backend.onrender.com/api/admin/categories/${editingCategory._id}`, catForm);
       } else {
-        await axios.post('http://localhost:5000/api/admin/categories', catForm);
+        await axios.post('https://librify-backend.onrender.com/api/admin/categories', catForm);
       }
       setIsCatModalOpen(false);
       setEditingCategory(null);
@@ -267,7 +267,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
   const handleDeleteCategory = async (id) => {
     if (!window.confirm('Xác nhận xóa thể loại này?')) return;
     try {
-      await axios.delete(`http://localhost:5000/api/admin/categories/${id}`);
+      await axios.delete(`https://librify-backend.onrender.com/api/admin/categories/${id}`);
       fetchCategories();
     } catch (err) {
       alert('Lỗi xóa thể loại');
@@ -277,7 +277,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
   // ==================== QUẢN LÝ ĐÁNH GIÁ (REVIEWS) ====================
   const handleToggleReview = async (id) => {
     try {
-      await axios.patch(`http://localhost:5000/api/admin/reviews/${id}/toggle`);
+      await axios.patch(`https://librify-backend.onrender.com/api/admin/reviews/${id}/toggle`);
       fetchReviews();
     } catch (err) {
       alert('Lỗi đổi trạng thái đánh giá');
@@ -287,7 +287,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
   const handleDeleteReview = async (id) => {
     if (!window.confirm('Xác nhận xóa đánh giá này khỏi MongoDB?')) return;
     try {
-      await axios.delete(`http://localhost:5000/api/admin/reviews/${id}`);
+      await axios.delete(`https://librify-backend.onrender.com/api/admin/reviews/${id}`);
       fetchReviews();
     } catch (err) {
       alert('Lỗi xóa đánh giá');
@@ -298,7 +298,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
   const handleClearCache = async () => {
     if (!window.confirm('Thao tác này sẽ xóa toàn bộ key trên Redis. Tiếp tục?')) return;
     try {
-      const res = await axios.post('http://localhost:5000/api/admin/clear-cache');
+      const res = await axios.post('https://librify-backend.onrender.com/api/admin/clear-cache');
       setCacheMsg(res.data?.message || 'Đã giải phóng toàn bộ Redis Cache!');
       setTimeout(() => setCacheMsg(''), 4000);
     } catch (err) {
@@ -356,7 +356,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
   // Hàm đảo trạng thái Duyệt / Ẩn sách
   const handleTogglePublish = async (bookId) => {
     try {
-      const res = await axios.patch(`http://localhost:5000/api/admin/books/${bookId}/publish`);
+      const res = await axios.patch(`https://librify-backend.onrender.com/api/admin/books/${bookId}/publish`);
       if (res.data?.success) {
         alert(res.data.message);
         fetchBooks(); // Tải lại danh sách
@@ -369,7 +369,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
   const handleOpenPreview = async (book) => {
     try {
       // Gọi API chi tiết sách (API này trả về đầy đủ content của từng chương)
-      const res = await axios.get(`http://localhost:5000/api/books/${book._id}`);
+      const res = await axios.get(`https://librify-backend.onrender.com/api/books/${book._id}`);
       if (res.data?.success) {
         setPreviewBook(res.data.data);
       } else {
@@ -428,13 +428,13 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
     try {
       if (selectedChapterIdx === -1) {
         await axios.post(
-          `http://localhost:5000/api/books/${selectedBookForChapter._id}/chapters`,
+          `https://librify-backend.onrender.com/api/books/${selectedBookForChapter._id}/chapters`,
           chapterForm
         );
         alert('🎉 Đã thêm chương mới thành công!');
       } else {
         await axios.put(
-          `http://localhost:5000/api/admin/books/${selectedBookForChapter._id}/chapters/${selectedChapterIdx}`,
+          `https://librify-backend.onrender.com/api/admin/books/${selectedBookForChapter._id}/chapters/${selectedChapterIdx}`,
           chapterForm
         );
         alert(`🎉 Đã cập nhật nội dung Chương ${selectedChapterIdx + 1} thành công!`);
