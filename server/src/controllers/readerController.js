@@ -100,33 +100,55 @@ exports.saveReadingProgress = async (req, res) => {
 };
 
 // 2. Lấy danh sách 5 cuốn sách vừa đọc gần nhất từ Redis List (ĐÃ SỬA: Chỉ lấy sách đã duyệt)
+// 2. Lấy danh sách 5 cuốn sách vừa đọc gần nhất từ Redis List
 exports.getRecentHistory = async (req, res) => {
   try {
     const { userId } = req.params;
-    const listKey = `recent_history:${userId}`;
+    if (!userId) {
+      return res.status(200).json({ success: true, data: [] });
+    }
 
+    const listKey = `recent_history:${userId}`;
     const bookIds = await redisClient.lRange(listKey, 0, 4);
+
     if (!bookIds || bookIds.length === 0) {
       return res.status(200).json({ success: true, data: [] });
     }
 
-    // CHỈ LẤY những cuốn có is_published: true
-    const books = await Book.find({ 
-      _id: { $in: bookIds },
-      is_published: true 
-    }).select('title cover_image author categories');
+    // Chuyển sang ObjectId hợp lệ để truy vấn MongoDB
+    const validObjectIds = bookIds
+      .filter((id) => mongoose.Types.ObjectId.isValid(id))
+      .map((id) => new mongoose.Types.ObjectId(id));
 
-    // Giữ nguyên thứ tự đọc gần nhất theo Redis List, loại bỏ sách chưa duyệt/đã ẩn
+    // Tìm sách: Hỗ trợ cả sách đã duyệt hoặc sách do chính user này đóng góp
+    const books = await Book.find({
+      _id: { $in: validObjectIds }
+    }).select('title cover_image author categories is_published').lean();
+
+    // Giữ nguyên thứ tự đọc gần nhất theo Redis List và chuẩn hóa author
     const result = bookIds
-      .map((id) => books.find((b) => b._id.toString() === id))
+      .map((id) => {
+        const b = books.find((x) => String(x._id) === String(id));
+        if (!b) return null;
+
+        // Chuẩn hóa tên tác giả dù lưu dạng String hay Object { name: ... }
+        const authorObj = typeof b.author === 'string' 
+          ? { name: b.author } 
+          : (b.author || { name: 'Nhiều tác giả' });
+
+        return {
+          ...b,
+          author: authorObj,
+        };
+      })
       .filter(Boolean);
 
-    res.status(200).json({ success: true, data: result });
+    return res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Lỗi getRecentHistory:', error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
-
 // 3. Lấy tiến trình đọc dở từ Redis Hashes (HGETALL)
 exports.getReadingProgress = async (req, res) => {
   try {
