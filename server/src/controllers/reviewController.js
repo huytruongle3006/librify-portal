@@ -1,18 +1,39 @@
 const Review = require('../models/Review');
+const Book = require('../models/Book');
+const User = require('../models/User');
 const mongoose = require('mongoose');
 
 // 1. Thêm đánh giá / bình luận mới
 exports.addReview = async (req, res) => {
   try {
-    const { userId, bookId, rating, comment } = req.body;
+    const { userId, bookId, rating, comment, userName } = req.body;
 
     if (!userId || !bookId || !rating || !comment) {
       return res.status(400).json({ success: false, message: 'Thiếu thông tin đánh giá' });
     }
 
+    // Tự động tìm user_name và book_title nếu frontend không gửi kèm
+    let finalUserName = userName;
+    if (!finalUserName && mongoose.Types.ObjectId.isValid(userId)) {
+      const user = await User.findById(userId).select('full_name username name');
+      if (user) {
+        finalUserName = user.full_name || user.username || user.name;
+      }
+    }
+
+    let finalBookTitle = '';
+    if (mongoose.Types.ObjectId.isValid(bookId)) {
+      const book = await Book.findById(bookId).select('title');
+      if (book) {
+        finalBookTitle = book.title;
+      }
+    }
+
     const review = await Review.create({
       user_id: userId,
+      user_name: finalUserName || 'Độc giả',
       book_id: bookId,
+      book_title: finalBookTitle,
       rating: Number(rating),
       comment: comment.trim(),
     });
@@ -23,13 +44,14 @@ exports.addReview = async (req, res) => {
       'full_name username role'
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'Đăng bình luận thành công',
       data: populatedReview,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Lỗi addReview:', error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -38,10 +60,18 @@ exports.getReviewsByBook = async (req, res) => {
   try {
     const { bookId } = req.params;
 
-    // Lấy danh sách bình luận sắp xếp mới nhất
+    if (!bookId || !mongoose.Types.ObjectId.isValid(bookId)) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        summary: { avgRating: 0, totalReviews: 0 },
+      });
+    }
+
+    // Lấy danh sách bình luận sắp xếp mới nhất theo created_at
     const reviews = await Review.find({ book_id: bookId })
       .populate('user_id', 'full_name username role')
-      .sort({ createdAt: -1 });
+      .sort({ created_at: -1 });
 
     // Sử dụng MongoDB Aggregation để tính điểm trung bình sao
     const stats = await Review.aggregate([
@@ -58,7 +88,7 @@ exports.getReviewsByBook = async (req, res) => {
     const avgRating = stats.length > 0 ? Math.round(stats[0].avgRating * 10) / 10 : 0;
     const totalReviews = stats.length > 0 ? stats[0].totalReviews : 0;
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: reviews,
       summary: {
@@ -67,6 +97,7 @@ exports.getReviewsByBook = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Lỗi getReviewsByBook:', error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
