@@ -13,7 +13,13 @@ connectRedis();
 
 const app = express();
 
-app.use(cors());
+const cors = require('cors');
+
+app.use(cors({
+  origin: '*', // Cho phép tất cả các domain hoặc điền 'https://librify-portal.vercel.app'
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+}));
 app.use(express.json());
 
 // Khai báo Routes
