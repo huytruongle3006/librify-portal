@@ -113,6 +113,7 @@ exports.getAllBooks = async (req, res) => {
   }
 };
 // Lấy danh sách tất cả sách do chính user này đăng (cả đã duyệt lẫn chờ duyệt)
+// Lấy danh sách tất cả sách do chính user này đăng (cả đã duyệt lẫn chờ duyệt)
 exports.getMyContributedBooks = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -120,13 +121,32 @@ exports.getMyContributedBooks = async (req, res) => {
 
     const conditions = [];
 
-    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
-      conditions.push({ created_by: userId });
+    // 1. Khớp theo created_by (hỗ trợ cả ObjectId và chuỗi String)
+    if (userId) {
+      if (mongoose.Types.ObjectId.isValid(userId)) {
+        conditions.push({ created_by: new mongoose.Types.ObjectId(userId) });
+      }
+      conditions.push({ created_by: String(userId) });
     }
 
+    // 2. Tìm theo tên tài khoản hoặc tên tác giả đã đăng
     if (userName && userName.trim() !== '') {
-      conditions.push({ uploader_name: userName.trim() });
-      conditions.push({ 'author.name': userName.trim() });
+      const cleanName = userName.trim();
+      conditions.push({ uploader_name: new RegExp(cleanName, 'i') });
+      conditions.push({ 'author.name': new RegExp(cleanName, 'i') });
+      conditions.push({ author: new RegExp(cleanName, 'i') });
+    }
+
+    // 3. Nếu tìm theo User ID lấy được thông tin người dùng từ DB, tự tìm thêm theo tên người dùng
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      const dbUser = await User.findById(userId).select('full_name username name');
+      if (dbUser) {
+        const uName = dbUser.full_name || dbUser.name || dbUser.username;
+        if (uName) {
+          conditions.push({ uploader_name: new RegExp(uName.trim(), 'i') });
+          conditions.push({ 'author.name': new RegExp(uName.trim(), 'i') });
+        }
+      }
     }
 
     if (conditions.length === 0) {
@@ -143,6 +163,7 @@ exports.getMyContributedBooks = async (req, res) => {
       data: books,
     });
   } catch (error) {
+    console.error('Lỗi getMyContributedBooks:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };

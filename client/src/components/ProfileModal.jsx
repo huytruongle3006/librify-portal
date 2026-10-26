@@ -48,11 +48,15 @@ export default function ProfileModal({
     }
   }, [isOpen, activeTab, currentUser]);
 
-  const fetchMyBooks = async () => {
+ const fetchMyBooks = async () => {
     try {
       setLoadingBooks(true);
       const userId = currentUser?._id || currentUser?.id;
-      const res = await axios.get(`https://librify-backend.onrender.com/api/books/my-contributions/${userId}`);
+      const userName = currentUser?.full_name || currentUser?.fullName || currentUser?.name || currentUser?.username || '';
+      
+      const res = await axios.get(
+        `https://librify-backend.onrender.com/api/books/my-contributions/${userId}?userName=${encodeURIComponent(userName)}`
+      );
       if (res.data?.success) {
         setMyBooks(res.data.data);
       }
