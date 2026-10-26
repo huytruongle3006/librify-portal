@@ -80,6 +80,10 @@ export default function App() {
     if (currentUser?._id) {
       fetchRecentHistory(currentUser._id);
       fetchCompletedBookIds(currentUser._id);
+    } else {
+      // 👉 THÊM VÀO ĐÂY: Reset sạch danh sách khi đã đăng xuất
+      setRecentHistory([]); 
+      setCompletedBookIds([]); 
     }
   }, [currentUser]);
 
@@ -176,6 +180,7 @@ export default function App() {
     localStorage.removeItem('lib_user');
     localStorage.removeItem('lib_token');
     setViewMode('portal');
+    setRecentBooks([]);
   };
 
   const filteredBooks = useMemo(() => {
@@ -384,7 +389,13 @@ export default function App() {
           )
         ) : viewMode === 'portal' ? (
           <div>
-            <RecentHistory recentBooks={recentBooks} onOpenBook={openBook} darkMode={darkMode} />
+            {currentUser && recentBooks && recentBooks.length > 0 && (
+              <RecentHistory
+                books={recentBooks}
+                onSelectBook={handleSelectBook}
+                darkMode={darkMode}
+              />
+            )}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 340px', gap: '32px' }}>
               <div style={{ minWidth: 0 }}>
