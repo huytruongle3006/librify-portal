@@ -17,13 +17,13 @@ export default function ReaderView({ bookId, onBack, currentUser, darkMode }) {
 
     const initReaderData = async () => {
       try {
-        const bookReq = axios.get(`http://localhost:5000/api/books/${bookId}`);
+        const bookReq = axios.get(`https://librify-backend.onrender.com/api/books/${bookId}`);
         const requests = [bookReq];
 
         if (currentUser?._id) {
           requests.push(
-            axios.get(`http://localhost:5000/api/reader/progress/${currentUser._id}/${bookId}`),
-            axios.get(`http://localhost:5000/api/reader/check-completed/${currentUser._id}/${bookId}`)
+            axios.get(`https://librify-backend.onrender.com/api/reader/progress/${currentUser._id}/${bookId}`),
+            axios.get(`https://librify-backend.onrender.com/api/reader/check-completed/${currentUser._id}/${bookId}`)
           );
         }
 
@@ -102,7 +102,7 @@ export default function ReaderView({ bookId, onBack, currentUser, darkMode }) {
 
     const actualChapterNumber = Number(chapterIdx) + 1;
 
-    axios.post('http://localhost:5000/api/reader/progress', {
+    axios.post('https://librify-backend.onrender.com/api/reader/progress', {
       userId: currentUser._id,
       bookId,
       page: pageVal,
@@ -137,7 +137,7 @@ export default function ReaderView({ bookId, onBack, currentUser, darkMode }) {
   const handleToggleMarkRead = async () => {
     if (!currentUser?._id || !bookId) return;
     try {
-      const res = await axios.post('http://localhost:5000/api/reader/toggle-completed', {
+      const res = await axios.post('https://librify-backend.onrender.com/api/reader/toggle-completed', {
         userId: currentUser._id,
         bookId,
       });

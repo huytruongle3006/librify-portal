@@ -67,7 +67,7 @@ export default function ContributeModal({ isOpen, onClose, currentUser, darkMode
                 // Admin tạo thì tự động ĐÃ DUYỆT (true), độc giả tạo thì CHỜ DUYỆT (false)
                 is_published: currentUser?.role === 'admin',
             };
-            const res = await axios.post('http://localhost:5000/api/books/contribute', payload);
+            const res = await axios.post('https://librify-backend.onrender.com/api/books/contribute', payload);
 
             if (res.data?.success) {
                 alert('🎉 ' + res.data.message);

@@ -23,7 +23,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('http://localhost:5000/api/users/login', {
+            const res = await axios.post('https://librify-backend.onrender.com/api/users/login', {
                 username: formData.username,
                 password: formData.password,
             });
@@ -39,7 +39,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     const handleRegister = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('http://localhost:5000/api/users/register', {
+            const res = await axios.post('https://librify-backend.onrender.com/api/users/register', {
                 username: formData.username,
                 email: formData.email,
                 password: formData.password,
@@ -58,7 +58,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         e.preventDefault();
         try {
             // forgot
-            const res = await axios.post('http://localhost:5000/api/users/forgot-password', { email: formData.email });
+            const res = await axios.post('https://librify-backend.onrender.com/api/users/forgot-password', { email: formData.email });
             if (res.data.success) {
                 setDemoOtp(res.data.demoOtpCode);
                 setMsg({ type: 'success', text: `Mã OTP xác thực mô phỏng: ${res.data.demoOtpCode}` });
@@ -71,7 +71,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }) {
     const handleResetPassword = async (e) => {
         e.preventDefault();
         try {
-            const res = await axios.post('http://localhost:5000/api/users/reset-password', {
+            const res = await axios.post('https://librify-backend.onrender.com/api/users/reset-password', {
                 email: formData.email,
                 otpCode: formData.otpCode,
                 newPassword: formData.newPassword,

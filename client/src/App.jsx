@@ -37,7 +37,7 @@ export default function App() {
   const fetchStats = async () => {
     try {
       const userId = currentUser?._id || '';
-      const res = await axios.get(`http://localhost:5000/api/books/stats?userId=${userId}`);
+      const res = await axios.get(`http://https://librify-backend.onrender.com/api/books/stats?userId=${userId}`);
       if (res.data.success) {
         setStatsData(res.data.data);
       }
@@ -58,7 +58,7 @@ export default function App() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/categories');
+        const res = await axios.get('http://https://librify-backend.onrender.com/api/categories');
         if (res.data.success && res.data.data.length > 0) {
           const catNames = ['Tất cả', '❤️ Yêu thích', '✅ Đã đọc', ...res.data.data.map((c) => c.name)];
           setCategories(catNames);
@@ -86,7 +86,7 @@ export default function App() {
   useEffect(() => {
     if (currentUser?._id) {
       axios
-        .get(`http://localhost:5000/api/favorites/ids/${currentUser._id}`)
+        .get(`http://https://librify-backend.onrender.com/api/favorites/ids/${currentUser._id}`)
         .then((res) => {
           if (res.data.success) {
             setFavoriteBookIds(res.data.data);
@@ -101,7 +101,7 @@ export default function App() {
   const fetchCompletedBookIds = async (userId) => {
     if (!userId) return;
     try {
-      const res = await axios.get(`http://localhost:5000/api/reader/completed-ids/${userId}`);
+      const res = await axios.get(`http://https://librify-backend.onrender.com/api/reader/completed-ids/${userId}`);
       if (res.data.success) {
         setCompletedBookIds(res.data.data);
       }
@@ -117,7 +117,7 @@ export default function App() {
     }
 
     try {
-      const res = await axios.post('http://localhost:5000/api/favorites/toggle', {
+      const res = await axios.post('http://https://librify-backend.onrender.com/api/favorites/toggle', {
         userId: currentUser._id,
         bookId,
       });
@@ -136,7 +136,7 @@ export default function App() {
 
   const fetchBooks = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/books?limit=60');
+      const res = await axios.get('http://https://librify-backend.onrender.com/api/books?limit=60');
       if (res.data.success) {
         setBooks(res.data.data);
         setTotalBooks(res.data.total);
@@ -148,7 +148,7 @@ export default function App() {
 
   const fetchTrending = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/reader/trending');
+      const res = await axios.get('http://https://librify-backend.onrender.com/api/reader/trending');
       if (res.data.success) setTrending(res.data.data);
     } catch (err) {
       console.error(err);
@@ -157,7 +157,7 @@ export default function App() {
 
   const fetchRecentHistory = async (userId) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/reader/history/${userId}`);
+      const res = await axios.get(`http://https://librify-backend.onrender.com/api/reader/history/${userId}`);
       if (res.data.success) setRecentBooks(res.data.data);
     } catch (err) {
       console.error(err);
@@ -199,7 +199,7 @@ export default function App() {
   }, [books, searchQuery, selectedCategory, favoriteBookIds, completedBookIds]);
   const openBook = async (bookId) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/books/${bookId}`);
+      const res = await axios.get(`http://https://librify-backend.onrender.com/api/books/${bookId}`);
       if (!res.data?.success) return;
 
       const book = res.data.data;
@@ -211,7 +211,7 @@ export default function App() {
 
       // Theo dõi phiên đọc và cập nhật bảng xếp hạng Trending
       axios
-        .post(`http://localhost:5000/api/reader/track-read/${bookId}`, { userId })
+        .post(`http://https://librify-backend.onrender.com/api/reader/track-read/${bookId}`, { userId })
         .then((response) => {
           if (response.data?.counted) {
             fetchTrending();
@@ -220,7 +220,7 @@ export default function App() {
         .catch((err) => console.error('Lỗi theo dõi phiên đọc:', err));
 
       // Lấy tiến độ đọc trước đó từ Redis
-      const progressRes = await axios.get(`http://localhost:5000/api/reader/progress/${userId}/${bookId}`);
+      const progressRes = await axios.get(`http://https://librify-backend.onrender.com/api/reader/progress/${userId}/${bookId}`);
       const progress = progressRes.data?.data;
 
       let initChapter = 0; // Chương 1 tương ứng với chỉ số index 0
@@ -254,7 +254,7 @@ export default function App() {
   };
   const loadChapter = async (bookId, chap, page = 1) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/books/${bookId}/chapters/${chap}`);
+      const res = await axios.get(`http://https://librify-backend.onrender.com/api/books/${bookId}/chapters/${chap}`);
       if (res.data.success) {
         setCurrentChapter(res.data.chapter);
         setChapterNum(chap);
@@ -271,7 +271,7 @@ export default function App() {
     const bookIdToSave = targetBookId || selectedBook?._id;
     if (!bookIdToSave) return;
     try {
-      await axios.post('http://localhost:5000/api/reader/progress', {
+      await axios.post('http://https://librify-backend.onrender.com/api/reader/progress', {
         userId,
         bookId: bookIdToSave,
         chapter: chapVal,

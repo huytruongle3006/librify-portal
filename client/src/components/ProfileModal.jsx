@@ -65,7 +65,7 @@ export default function ProfileModal({ isOpen, onClose, currentUser, onUpdateUse
         payload.newPassword = formData.newPassword;
       }
 
-      const res = await axios.put('http://localhost:5000/api/users/profile', payload);
+      const res = await axios.put('https://librify-backend.onrender.com/api/users/profile', payload);
 
       if (res.data?.success) {
         alert('🎉 ' + res.data.message);
