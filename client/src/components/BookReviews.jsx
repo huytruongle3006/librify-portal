@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+const BACKEND_URL = 'https://librify-backend.onrender.com';
+
 export default function BookReviews({ bookId, currentUser, darkMode }) {
   const [reviews, setReviews] = useState([]);
   const [summary, setSummary] = useState({ avgRating: 0, totalReviews: 0 });
@@ -14,10 +16,10 @@ export default function BookReviews({ bookId, currentUser, darkMode }) {
 
   const fetchReviews = async () => {
     try {
-      const res = await axios.get(`/api/reviews/book/${bookId}`);
+      const res = await axios.get(`${BACKEND_URL}/api/reviews/book/${bookId}`);
       if (res.data.success) {
-        setReviews(res.data.data);
-        setSummary(res.data.summary);
+        setReviews(res.data.data || []);
+        setSummary(res.data.summary || { avgRating: 0, totalReviews: 0 });
       }
     } catch (err) {
       console.error('Lỗi lấy đánh giá:', err);
@@ -26,13 +28,14 @@ export default function BookReviews({ bookId, currentUser, darkMode }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!currentUser) return alert('Vui lòng đăng nhập để gửi nhận xét');
+    const currentUserId = currentUser?._id || currentUser?.id;
+    if (!currentUserId) return alert('Vui lòng đăng nhập để gửi nhận xét');
     if (!comment.trim()) return;
 
     setSubmitting(true);
     try {
-      const res = await axios.post('/api/reviews', {
-        userId: currentUser._id,
+      const res = await axios.post(`${BACKEND_URL}/api/reviews`, {
+        userId: currentUserId,
         bookId,
         rating,
         comment,
@@ -51,11 +54,11 @@ export default function BookReviews({ bookId, currentUser, darkMode }) {
 
   return (
     <div style={{
-      marginTop: '40px',
+      marginTop: '32px',
       background: darkMode ? '#1e293b' : '#ffffff',
       padding: '28px',
       borderRadius: '16px',
-      border: `1px solid ${darkMode ? 'rgba(255,255,255,0.06)' : '#e2e8f0'}`,
+      border: `1px solid ${darkMode ? '#334155' : '#e2e8f0'}`,
       boxShadow: darkMode ? 'none' : '0 2px 8px rgba(0,0,0,0.03)',
       transition: 'all 0.3s ease'
     }}>
@@ -105,7 +108,7 @@ export default function BookReviews({ bookId, currentUser, darkMode }) {
           </div>
 
           <textarea
-            placeholder={`Chia sẻ cảm nhận của bạn về cuốn sách với vai trò ${currentUser.full_name}...`}
+            placeholder={`Chia sẻ cảm nhận của bạn về cuốn sách với vai trò ${currentUser.full_name || currentUser.username || 'độc giả'}...`}
             rows={3}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
@@ -183,7 +186,7 @@ export default function BookReviews({ bookId, currentUser, darkMode }) {
                   </div>
                   <div>
                     <span style={{ fontSize: '13px', fontWeight: '700', color: darkMode ? '#f8fafc' : '#0f172a' }}>
-                      {rev.user_id?.full_name || 'Độc giả ẩn danh'}
+                      {rev.user_id?.full_name || rev.user_id?.username || 'Độc giả ẩn danh'}
                     </span>
                     <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '8px' }}>
                       {new Date(rev.createdAt).toLocaleDateString('vi-VN')}
