@@ -1,6 +1,8 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Book = require('../models/Book');
 const { redisClient } = require('../config/redis');
+const { summarizeBook, chatWithAssistant, listAvailableModels } = require('../controllers/aiController');
+router.get('/models', listAvailableModels);
 
 // Khởi tạo Gemini client
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
@@ -126,5 +128,16 @@ const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
       success: false,
       message: error.message || 'Lỗi trò chuyện với Gemini AI',
     });
+  }
+};
+// Thêm vào cuối file aiController.js
+exports.listAvailableModels = async (req, res) => {
+  try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+    const data = await response.json();
+    return res.status(200).json(data);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
   }
 };
