@@ -36,9 +36,9 @@ ${contentSample}`;
       return res.status(500).json({ success: false, message: 'Chưa cấu hình GEMINI_API_KEY trên máy chủ' });
     }
 
-    // Gọi trực tiếp REST API của Gemini 2.5 Flash
+  // Gọi trực tiếp REST API của Gemini 3.8 Flash
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -99,8 +99,8 @@ Câu hỏi của độc giả: "${message}"
 Hãy trả lời lịch sự, thân thiện bằng tiếng Việt tự nhiên và ưu tiên gợi ý các cuốn sách thực tế có trong danh mục trên.`;
 
     const apiKey = process.env.GEMINI_API_KEY;
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+  const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
