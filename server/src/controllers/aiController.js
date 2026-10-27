@@ -53,10 +53,7 @@ Tác giả: ${book.author?.name || book.author || 'Chưa rõ'}
 Nội dung tiêu biểu:
 ${contentSample}`;
 
-  const model = genAI.getGenerativeModel(
-  { model: 'gemini-1.5-flash' },
-  { apiVersion: 'v1' }
-);
+ const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
     const result = await model.generateContent(prompt);
     const summary = result.response.text();
 
@@ -109,13 +106,7 @@ ${bookCatalog}
 4. Trả lời bằng tiếng Việt tự nhiên, ngắn gọn, có ngắt đoạn dễ đọc.`;
 
 // Đổi dòng khai báo model thành:
-const model = genAI.getGenerativeModel(
-  {
-    model: 'gemini-1.5-flash',
-    systemInstruction,
-  },
-  { apiVersion: 'v1' }
-);
+const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
     // Tạo phiên chat
     const chat = model.startChat({
