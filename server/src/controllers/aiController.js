@@ -1,47 +1,5 @@
 const Book = require('../models/Book');
 
-// Hàm bổ trợ gọi Gemini API với cơ chế tự động chuyển sang model dự phòng nếu bị 503
-async function generateWithFallback(promptText, apiKey) {
-  // Danh sách các model khả dụng sắp xếp theo độ ưu tiên
-  const candidateModels = [
-    'gemini-flash-latest',
-    'gemini-3.8-flash',
-    'gemini-3.7-flash',
-    'gemini-3.5-flash'
-  ];
-
-  let lastError = null;
-
-  for (const modelName of candidateModels) {
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptText }] }]
-          })
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        return data.candidates[0].content.parts[0].text;
-      }
-
-      console.warn(`Model ${modelName} trả về lỗi, chuyển model tiếp theo:`, data.error?.message || data);
-      lastError = data.error?.message || 'Lỗi không xác định từ model';
-    } catch (err) {
-      console.warn(`Lỗi kết nối tới model ${modelName}:`, err.message);
-      lastError = err.message;
-    }
-  }
-
-  throw new Error(lastError || 'Tất cả các model AI hiện đang bận');
-}
-
 // 1. Tóm tắt sách
 exports.summarizeBook = async (req, res) => {
   try {
@@ -78,7 +36,29 @@ ${contentSample}`;
       return res.status(500).json({ success: false, message: 'Chưa cấu hình GEMINI_API_KEY trên máy chủ' });
     }
 
-    const summary = await generateWithFallback(promptText, apiKey);
+    // Dùng gemini-3.8-flash-lite hoặc gemini-flash-lite-latest để ổn định và ít bị nghẽn tải
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }]
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Lỗi từ Gemini API:', data.error);
+      return res.status(response.status).json({
+        success: false,
+        message: data.error?.message || 'Dịch vụ AI đang bận, vui lòng thử lại sau giây lát.'
+      });
+    }
+
+    const summary = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Không thể tạo nội dung tóm tắt.';
 
     return res.status(200).json({
       success: true,
@@ -119,7 +99,28 @@ Câu hỏi của độc giả: "${message}"
 Hãy trả lời lịch sự, thân thiện bằng tiếng Việt tự nhiên và ưu tiên gợi ý các cuốn sách thực tế có trong danh mục trên.`;
 
     const apiKey = process.env.GEMINI_API_KEY;
-    const reply = await generateWithFallback(promptText, apiKey);
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }]
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Lỗi chat Gemini API:', data.error);
+      return res.status(response.status).json({
+        success: false,
+        message: data.error?.message || 'Trợ lý AI đang bận, bạn thử lại sau ít giây nhé.'
+      });
+    }
+
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Rất tiếc, mình chưa thể đưa ra câu trả lời lúc này.';
 
     return res.status(200).json({
       success: true,
