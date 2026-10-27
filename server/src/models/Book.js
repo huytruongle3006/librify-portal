@@ -77,6 +77,7 @@ const bookSchema = new mongoose.Schema(
       type: String,
       default: 'Ban Quản Trị',
     },
+    
     chapters: [chapterSchema],
   },
   { timestamps: true }

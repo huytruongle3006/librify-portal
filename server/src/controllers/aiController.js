@@ -1,6 +1,15 @@
 const Book = require('../models/Book');
 
-// 1. Tóm tắt sách (Có cơ chế Cache lưu trực tiếp vào MongoDB)
+// Tự động nạp Redis Client từ cấu hình hệ thống
+let redisClient;
+try {
+  const redisModule = require('../config/redis');
+  redisClient = redisModule.redisClient || redisModule.client || redisModule;
+} catch (err) {
+  console.warn('Không thể nạp Redis Client, hệ thống sẽ chạy ở chế độ không Cache:', err.message);
+}
+
+// 1. Tóm tắt sách (Bộ nhớ đệm Redis - 0 Token cho các lần gọi lặp lại)
 exports.summarizeBook = async (req, res) => {
   try {
     const { bookId } = req.body;
@@ -8,25 +17,35 @@ exports.summarizeBook = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Thiếu bookId' });
     }
 
-    // Lấy thông tin sách kèm trường ai_summary
-    const book = await Book.findById(bookId).select('title author chapters description ai_summary');
+    const cacheKey = `summary:book:${bookId}`;
+
+    // ========================================================
+    // ⚡ BƯỚC 1: KIỂM TRA BỘ NHỚ ĐỆM REDIS
+    // ========================================================
+    if (redisClient) {
+      try {
+        const cachedSummary = await redisClient.get(cacheKey);
+        if (cachedSummary) {
+          console.log(`⚡ [REDIS CACHE HIT] Lấy tóm tắt từ Redis cho sách: ${bookId}`);
+          return res.status(200).json({
+            success: true,
+            summary: cachedSummary,
+            cached: true
+          });
+        }
+      } catch (redisErr) {
+        console.warn('Lỗi khi đọc từ Redis:', redisErr.message);
+      }
+    }
+
+    // ========================================================
+    // BƯỚC 2: TRUY VẤN MONGODB NẾU CHƯA CÓ TRONG REDIS
+    // ========================================================
+    const book = await Book.findById(bookId).select('title author chapters description');
     if (!book) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy tác phẩm' });
     }
 
-    // ========================================================
-    // ⚡ KIỂM TRA BỘ NHỚ ĐỆM (CACHE):
-    // Nếu sách đã từng được AI tóm tắt trước đó -> Trả về ngay lập tức (0 Token)
-    // ========================================================
-    if (book.ai_summary && book.ai_summary.trim() !== '') {
-      return res.status(200).json({
-        success: true,
-        summary: book.ai_summary,
-        cached: true
-      });
-    }
-
-    // Nếu chưa có tóm tắt trong cache, chuẩn bị nội dung rút gọn gửi tới Gemini
     let contentSample = '';
     if (book.chapters && book.chapters.length > 0) {
       contentSample = book.chapters
@@ -50,7 +69,7 @@ ${contentSample}`;
       return res.status(500).json({ success: false, message: 'Chưa cấu hình GEMINI_API_KEY trên máy chủ' });
     }
 
-    // Gọi Gemini API tạo bản tóm tắt
+    // Gọi Gemini API phân tích nội dung
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
       {
@@ -79,10 +98,16 @@ ${contentSample}`;
     const summary = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Không thể tạo nội dung tóm tắt.';
 
     // ========================================================
-    // 💾 LƯU KẾT QUẢ VÀO MONGODB ĐỂ TÁI SỬ DỤNG CHO CÁC LẦN SAU
+    // 💾 BƯỚC 3: LƯU VÀO REDIS (Hạn lưu trữ: 7 ngày = 604800 giây)
     // ========================================================
-    book.ai_summary = summary;
-    await book.save();
+    if (redisClient) {
+      try {
+        await redisClient.set(cacheKey, summary, { EX: 60 * 60 * 24 * 7 });
+        console.log(`💾 [REDIS CACHED] Đã lưu tóm tắt vào Redis key: ${cacheKey}`);
+      } catch (saveRedisErr) {
+        console.warn('Lỗi khi ghi dữ liệu vào Redis:', saveRedisErr.message);
+      }
+    }
 
     return res.status(200).json({
       success: true,
