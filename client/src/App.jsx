@@ -9,6 +9,7 @@ import RecentHistory from './components/RecentHistory';
 import StatsModal from './components/StatsModal';
 import AuthModal from './components/UserModal';
 import AdminDashboard from './components/AdminDashboard';
+import AIChatBot from './components/AIChatBot';
 
 export default function App() {
   const [categories, setCategories] = useState(['Tất cả']);
@@ -177,17 +178,17 @@ export default function App() {
     fetchRecentHistory(user._id);
   };
 
- // SỬA LẠI THÀNH:
-const handleLogout = () => {
-  const isConfirmed = window.confirm('Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?');
-  if (!isConfirmed) return; // Nếu bấm "Hủy" (Cancel) thì dừng lại, không đăng xuất
+  // SỬA LẠI THÀNH:
+  const handleLogout = () => {
+    const isConfirmed = window.confirm('Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?');
+    if (!isConfirmed) return; // Nếu bấm "Hủy" (Cancel) thì dừng lại, không đăng xuất
 
-  setCurrentUser(null);
-  localStorage.removeItem('lib_user');
-  localStorage.removeItem('lib_token');
-  setViewMode('portal');
-  setRecentBooks([]);
-};
+    setCurrentUser(null);
+    localStorage.removeItem('lib_user');
+    localStorage.removeItem('lib_token');
+    setViewMode('portal');
+    setRecentBooks([]);
+  };
 
   const filteredBooks = useMemo(() => {
     return books.filter((b) => {
@@ -467,6 +468,11 @@ const handleLogout = () => {
         darkMode={darkMode}
       />
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} onAuthSuccess={handleAuthSuccess} />
+      {/* 👉 TIỆN ÍCH CHATBOT GEMINI AI */}
+      <AIChatBot
+        darkMode={darkMode}
+        currentBook={viewMode === 'reader' ? selectedBook : null}
+      />
     </div>
   );
 }

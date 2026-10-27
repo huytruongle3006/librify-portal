@@ -143,7 +143,7 @@ export default function ReaderView({ bookId, onBack, currentUser, darkMode }) {
     }
   };
 
-const renderPageContent = () => {
+  const renderPageContent = () => {
     const chapterName = currentChapter.title || `Chương ${activeChapterIndex + 1}`;
     const bookTitle = book?.title || 'Tác phẩm';
     const contentText = currentChapter.content || currentChapter.description || '';
@@ -233,7 +233,7 @@ const renderPageContent = () => {
               border: `1px dashed ${darkMode ? '#334155' : '#cbd5e1'}`,
               textAlign: 'center',
               color: darkMode ? '#94a3b8' : '#64748b',
-              fontStyle: 'italic',  
+              fontStyle: 'italic',
               marginTop: '16px'
             }}>
               📖 Nội dung của chương này đang được cập nhật hoặc chưa có dữ liệu.
@@ -282,7 +282,35 @@ const renderPageContent = () => {
             <span style={{ fontSize: '13px', fontWeight: '600' }}>{fontSize}px</span>
             <button onClick={() => setFontSize((s) => Math.min(24, s + 1))} style={{ background: 'none', border: 'none', color: darkMode ? '#fff' : '#000', cursor: 'pointer', fontWeight: 'bold' }}>A+</button>
           </div>
-
+          {/* Thêm nút Tóm tắt bằng AI bên cạnh nút Đánh dấu đã đọc */}
+          <button
+            onClick={async () => {
+              try {
+                const res = await axios.post('https://librify-backend.onrender.com/api/ai/summarize', {
+                  bookId: book._id,
+                });
+                if (res.data?.success) {
+                  alert(`✨ TÓM TẮT TÁC PHẨM "${book.title}":\n\n${res.data.summary}`);
+                }
+              } catch {
+                alert('Chưa thể lấy tóm tắt cho sách này lúc này.');
+              }
+            }}
+            style={{
+              background: darkMode ? '#1e293b' : '#ffffff',
+              border: `1px solid ${darkMode ? '#334155' : '#e2e8f0'}`,
+              color: '#6366f1',
+              padding: '9px 16px',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            ✨ Tóm tắt sách
+          </button>
           <button
             onClick={handleToggleMarkRead}
             style={{
