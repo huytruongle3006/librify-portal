@@ -153,8 +153,8 @@ const renderPageContent = () => {
     if (/---+/.test(contentText)) {
       pages = contentText.split(/\s*---+[\s\r\n]*/).map((p) => p.trim()).filter(Boolean);
     } else if (contentText.trim() !== '') {
-      // Tách an toàn khoảng 1500 ký tự nhưng không làm đứt đôi từ
-      const maxChars = 1500;
+      // Tách an toàn khoảng 3000 ký tự nhưng không làm đứt đôi từ
+      const maxChars = 3000;
       let text = contentText.trim();
       while (text.length > 0) {
         if (text.length <= maxChars) {
