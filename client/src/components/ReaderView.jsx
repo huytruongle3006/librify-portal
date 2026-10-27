@@ -143,21 +143,32 @@ export default function ReaderView({ bookId, onBack, currentUser, darkMode }) {
     }
   };
 
-  const renderPageContent = () => {
+const renderPageContent = () => {
     const chapterName = currentChapter.title || `Chương ${activeChapterIndex + 1}`;
     const bookTitle = book?.title || 'Tác phẩm';
     const contentText = currentChapter.content || currentChapter.description || '';
 
+    // 1. Phân chia nội dung theo trang
     let pages = [];
-    if (contentText.includes('---')) {
-      pages = contentText.split(/\s*---\s*/).map((p) => p.trim()).filter(Boolean);
+    if (/---+/.test(contentText)) {
+      pages = contentText.split(/\s*---+[\s\r\n]*/).map((p) => p.trim()).filter(Boolean);
     } else if (contentText.trim() !== '') {
-      const chunkSize = 400;
-      for (let i = 0; i < contentText.length; i += chunkSize) {
-        pages.push(contentText.slice(i, i + chunkSize));
+      // Tách an toàn khoảng 1500 ký tự nhưng không làm đứt đôi từ
+      const maxChars = 1500;
+      let text = contentText.trim();
+      while (text.length > 0) {
+        if (text.length <= maxChars) {
+          pages.push(text);
+          break;
+        }
+        let breakIndex = text.lastIndexOf(' ', maxChars);
+        if (breakIndex === -1 || breakIndex < maxChars * 0.7) breakIndex = maxChars;
+        pages.push(text.slice(0, breakIndex).trim());
+        text = text.slice(breakIndex).trim();
       }
     }
 
+    // 2. Xác định nội dung cho trang hiện tại
     const pageIndex = Math.max(0, currentPage - 1);
     let currentPageText = '';
     let isPageEmpty = false;
@@ -171,11 +182,12 @@ export default function ReaderView({ bookId, onBack, currentUser, darkMode }) {
     }
 
     return (
-      <div style={{ lineHeight: '1.85', fontSize: `${fontSize}px`, color: darkMode ? '#cbd5e1' : '#334155' }}>
+      <div style={{ lineHeight: '1.9', fontSize: `${fontSize}px`, color: darkMode ? '#cbd5e1' : '#334155' }}>
+        {/* Header trang đọc */}
         <div style={{
           borderBottom: `1px solid ${darkMode ? '#334155' : '#e2e8f0'}`,
           paddingBottom: '12px',
-          marginBottom: '20px',
+          marginBottom: '24px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center'
@@ -184,19 +196,17 @@ export default function ReaderView({ bookId, onBack, currentUser, darkMode }) {
             {bookTitle}
           </span>
           <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-            Phần: {chapterName}
+            {chapterName}
           </span>
         </div>
 
-        <h3 style={{ fontSize: `${fontSize + 4}px`, fontWeight: '800', color: darkMode ? '#f8fafc' : '#0f172a', marginBottom: '16px' }}>
-          Mục {activeChapterIndex + 1}.{currentPage}: {currentChapter.title || 'Nội dung chi tiết'}
-        </h3>
+        {/* ĐÃ XÓA BỎ DÒNG TIÊU ĐỀ <h3> Mục X.Y LẶP LẠI Ở ĐÂY */}
 
+        {/* Nội dung thực tế của trang đọc */}
         <div style={{
           fontSize: `${fontSize}px`,
-          lineHeight: '1.85',
+          lineHeight: '1.9',
           textAlign: 'justify',
-          marginTop: '20px',
           whiteSpace: 'pre-line',
           color: darkMode ? '#e2e8f0' : '#1e293b'
         }}>
