@@ -27,7 +27,7 @@ export default function RecentHistory({ recentBooks = [], onOpenBook, darkMode }
           letterSpacing: '0.5px',
         }}
       >
-        <i className="fa-solid fa-clock-rotate-left"></i> Vừa đọc gần đây (Redis List)
+        <i className="fa-solid fa-clock-rotate-left"></i> Vừa đọc gần đây 
       </div>
 
       <div
