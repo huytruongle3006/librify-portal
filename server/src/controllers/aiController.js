@@ -53,7 +53,7 @@ Tác giả: ${book.author?.name || book.author || 'Chưa rõ'}
 Nội dung tiêu biểu:
 ${contentSample}`;
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
     const result = await model.generateContent(prompt);
     const summary = result.response.text();
 
@@ -105,10 +105,10 @@ ${bookCatalog}
 3. Nếu người dùng hỏi xin gợi ý sách, hãy ưu tiên gợi ý các tác phẩm có trong danh mục trên và giải thích ngắn gọn lý do phù hợp. Nếu không có sách phù hợp hoàn toàn, hãy đưa ra gợi ý liên quan và khuyên họ tìm đọc thêm.
 4. Trả lời bằng tiếng Việt tự nhiên, ngắn gọn, có ngắt đoạn dễ đọc.`;
 
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction,
-    });
+   const model = genAI.getGenerativeModel({
+  model: 'gemini-1.5-flash-latest',
+  systemInstruction,
+});
 
     // Tạo phiên chat
     const chat = model.startChat({
