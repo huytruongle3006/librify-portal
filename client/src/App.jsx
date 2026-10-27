@@ -177,13 +177,17 @@ export default function App() {
     fetchRecentHistory(user._id);
   };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('lib_user');
-    localStorage.removeItem('lib_token');
-    setViewMode('portal');
-    setRecentBooks([]);
-  };
+ // SỬA LẠI THÀNH:
+const handleLogout = () => {
+  const isConfirmed = window.confirm('Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?');
+  if (!isConfirmed) return; // Nếu bấm "Hủy" (Cancel) thì dừng lại, không đăng xuất
+
+  setCurrentUser(null);
+  localStorage.removeItem('lib_user');
+  localStorage.removeItem('lib_token');
+  setViewMode('portal');
+  setRecentBooks([]);
+};
 
   const filteredBooks = useMemo(() => {
     return books.filter((b) => {
@@ -391,13 +395,13 @@ export default function App() {
           )
         ) : viewMode === 'portal' ? (
           <div>
-        {currentUser && recentBooks && recentBooks.length > 0 && (
-  <RecentHistory
-    recentBooks={recentBooks}
-    onOpenBook={openBook}
-    darkMode={darkMode}
-  />
-)}
+            {currentUser && recentBooks && recentBooks.length > 0 && (
+              <RecentHistory
+                recentBooks={recentBooks}
+                onOpenBook={openBook}
+                darkMode={darkMode}
+              />
+            )}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 340px', gap: '32px' }}>
               <div style={{ minWidth: 0 }}>
