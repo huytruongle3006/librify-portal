@@ -1,6 +1,6 @@
 const Book = require('../models/Book');
 
-// 1. Tóm tắt sách
+// 1. Tóm tắt sách (Có cơ chế Cache lưu trực tiếp vào MongoDB)
 exports.summarizeBook = async (req, res) => {
   try {
     const { bookId } = req.body;
@@ -8,19 +8,33 @@ exports.summarizeBook = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Thiếu bookId' });
     }
 
-    const book = await Book.findById(bookId).select('title author chapters description');
+    // Lấy thông tin sách kèm trường ai_summary
+    const book = await Book.findById(bookId).select('title author chapters description ai_summary');
     if (!book) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy tác phẩm' });
     }
 
+    // ========================================================
+    // ⚡ KIỂM TRA BỘ NHỚ ĐỆM (CACHE):
+    // Nếu sách đã từng được AI tóm tắt trước đó -> Trả về ngay lập tức (0 Token)
+    // ========================================================
+    if (book.ai_summary && book.ai_summary.trim() !== '') {
+      return res.status(200).json({
+        success: true,
+        summary: book.ai_summary,
+        cached: true
+      });
+    }
+
+    // Nếu chưa có tóm tắt trong cache, chuẩn bị nội dung rút gọn gửi tới Gemini
     let contentSample = '';
     if (book.chapters && book.chapters.length > 0) {
       contentSample = book.chapters
-        .slice(0, 3)
-        .map((ch, idx) => `[Chương ${idx + 1}: ${ch.title || ''}]\n${(ch.content || ch.description || '').slice(0, 800)}`)
+        .slice(0, 2)
+        .map((ch, idx) => `[Chương ${idx + 1}: ${ch.title || ''}]\n${(ch.content || ch.description || '').slice(0, 500)}`)
         .join('\n\n');
     } else {
-      contentSample = book.description || 'Không có mô tả chi tiết.';
+      contentSample = (book.description || 'Không có mô tả chi tiết.').slice(0, 800);
     }
 
     const promptText = `Bạn là trợ lý ảo của thư viện số Librify.
@@ -36,14 +50,18 @@ ${contentSample}`;
       return res.status(500).json({ success: false, message: 'Chưa cấu hình GEMINI_API_KEY trên máy chủ' });
     }
 
-    // Dùng gemini-3.8-flash-lite hoặc gemini-flash-lite-latest để ổn định và ít bị nghẽn tải
+    // Gọi Gemini API tạo bản tóm tắt
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }]
+          contents: [{ parts: [{ text: promptText }] }],
+          generationConfig: {
+            maxOutputTokens: 400,
+            temperature: 0.7
+          }
         })
       }
     );
@@ -54,15 +72,22 @@ ${contentSample}`;
       console.error('Lỗi từ Gemini API:', data.error);
       return res.status(response.status).json({
         success: false,
-        message: data.error?.message || 'Dịch vụ AI đang bận, vui lòng thử lại sau giây lát.'
+        message: data.error?.message || 'Dịch vụ AI đang bận, vui lòng thử lại sau.'
       });
     }
 
     const summary = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Không thể tạo nội dung tóm tắt.';
 
+    // ========================================================
+    // 💾 LƯU KẾT QUẢ VÀO MONGODB ĐỂ TÁI SỬ DỤNG CHO CÁC LẦN SAU
+    // ========================================================
+    book.ai_summary = summary;
+    await book.save();
+
     return res.status(200).json({
       success: true,
-      summary
+      summary,
+      cached: false
     });
   } catch (error) {
     console.error('Lỗi controller summarizeBook:', error);
@@ -99,13 +124,21 @@ Câu hỏi của độc giả: "${message}"
 Hãy trả lời lịch sự, thân thiện bằng tiếng Việt tự nhiên và ưu tiên gợi ý các cuốn sách thực tế có trong danh mục trên.`;
 
     const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ success: false, message: 'Chưa cấu hình GEMINI_API_KEY trên máy chủ' });
+    }
+
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }]
+          contents: [{ parts: [{ text: promptText }] }],
+          generationConfig: {
+            maxOutputTokens: 500,
+            temperature: 0.7
+          }
         })
       }
     );
