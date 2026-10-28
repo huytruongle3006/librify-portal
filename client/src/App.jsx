@@ -141,9 +141,10 @@ export default function App() {
     }
   };
 
-  const fetchBooks = async () => {
+ const fetchBooks = async () => {
     try {
-      const res = await axios.get('https://librify-backend.onrender.com/api/books?limit=60');
+      // Tăng limit lên 100 (hoặc bỏ query limit) để lấy đủ toàn bộ 64 cuốn
+      const res = await axios.get('https://librify-backend.onrender.com/api/books?limit=100');
       if (res.data.success) {
         setBooks(res.data.data);
         setTotalBooks(res.data.total);
