@@ -66,33 +66,53 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+// 1. Tạo tài khoản mới từ Admin Dashboard
 exports.createUser = async (req, res) => {
   try {
     const { full_name, email, password, role } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Email và mật khẩu là bắt buộc' });
+      return res.status(400).json({ success: false, message: 'Email và mật khẩu không được để trống' });
     }
 
-    const existing = await User.findOne({ email });
-    if (existing) {
-      return res.status(400).json({ success: false, message: 'Email này đã tồn tại' });
+    const emailClean = email.trim().toLowerCase();
+    const existingUser = await User.findOne({ email: emailClean });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'Email này đã tồn tại trong hệ thống' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Tự sinh username từ email nếu không nhập
+    const baseUsername = emailClean.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
+    let username = baseUsername;
+    let count = 1;
+    while (await User.findOne({ username })) {
+      username = `${baseUsername}${count++}`;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password.trim(), salt);
+
     const newUser = await User.create({
-      full_name: full_name || 'Độc giả mới',
-      email,
+      full_name: full_name ? full_name.trim() : 'Độc giả mới',
+      username,
+      email: emailClean,
       password: hashedPassword,
       role: role || 'reader',
       status: 'active',
     });
 
-    res.status(201).json({ success: true, message: 'Thêm tài khoản thành công', data: newUser });
+    const userObj = newUser.toObject();
+    delete userObj.password;
+
+    return res.status(201).json({
+      success: true,
+      message: 'Tạo tài khoản thành công!',
+      data: userObj,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Lỗi admin createUser:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Lỗi tạo tài khoản' });
   }
 };
-
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -168,15 +188,43 @@ exports.getAllCategories = async (req, res) => {
   }
 };
 
+// 2. Tạo thể loại mới từ Admin Dashboard
 exports.createCategory = async (req, res) => {
   try {
     const { name, description } = req.body;
-    if (!name) return res.status(400).json({ success: false, message: 'Tên thể loại là bắt buộc' });
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, message: 'Tên thể loại không được để trống' });
+    }
 
-    const newCat = await Category.create({ name, description });
-    res.status(201).json({ success: true, message: 'Thêm thể loại thành công', data: newCat });
+    const nameClean = name.trim();
+    const slug = nameClean
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[đĐ]/g, 'd')
+      .replace(/[^a-z0-9 ]/g, '')
+      .trim()
+      .replace(/\s+/g, '-');
+
+    const existing = await Category.findOne({ $or: [{ name: nameClean }, { slug }] });
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'Thể loại này đã tồn tại trong danh mục' });
+    }
+
+    const newCategory = await Category.create({
+      name: nameClean,
+      slug,
+      description: description ? description.trim() : '',
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Tạo thể loại mới thành công!',
+      data: newCategory,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Lỗi admin createCategory:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Lỗi tạo thể loại' });
   }
 };
 
