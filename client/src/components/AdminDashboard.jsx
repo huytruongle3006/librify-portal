@@ -11,7 +11,6 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
   const [categories, setCategories] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [trending, setTrending] = useState([]);
-  const [cacheMsg, setCacheMsg] = useState('');
 
   // Modals & Forms Sách
   const [isAddBookOpen, setIsAddBookOpen] = useState(false);
@@ -332,17 +331,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
     }
   };
 
-  // ==================== REDIS CACHE ====================
-  const handleClearCache = async () => {
-    if (!window.confirm('Thao tác này sẽ xóa toàn bộ key trên Redis. Tiếp tục?')) return;
-    try {
-      const res = await axios.post('https://librify-backend.onrender.com/api/admin/clear-cache');
-      setCacheMsg(res.data?.message || 'Đã giải phóng toàn bộ Redis Cache!');
-      setTimeout(() => setCacheMsg(''), 4000);
-    } catch (err) {
-      setCacheMsg('Lỗi dọn cache: ' + err.message);
-    }
-  };
+
 
   // Bộ lọc tìm kiếm
   const filteredBooks = (books || []).filter((b) => {
@@ -460,7 +449,6 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
             { id: 'categories', label: 'Quản Lý Thể Loại', icon: 'fa-tags' },
             { id: 'reviews', label: 'Quản Lý Đánh Giá', icon: 'fa-comments' },
             { id: 'analytics', label: 'Báo Cáo & Xu Hướng', icon: 'fa-chart-line' },
-            { id: 'system', label: 'Giám Sát & Cache', icon: 'fa-server' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -1058,42 +1046,7 @@ export default function AdminDashboard({ onBack, onBookCreated, darkMode, curren
         </div>
       )}
 
-      {/* TAB 6: GIÁM SÁT HỆ THỐNG & CACHE REDIS */}
-      {activeTab === 'system' && (
-        <div style={cardStyle}>
-          <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: '800' }}>Bộ Nhớ Đệm & Tối Ưu Hóa (Cache-Aside Redis)</h3>
-          <p style={{ color: darkMode ? '#94a3b8' : '#64748b', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
-            Hệ thống kết hợp Redis Hashes (lưu tọa độ đọc dở), Redis List (lưu lịch sử vừa đọc), và Redis ZSET (bảng xếp hạng thịnh hành).
-            Mỗi khi cập nhật dữ liệu hàng loạt từ MongoDB, hãy giải phóng cache để người dùng nhận dữ liệu mới tức thì.
-          </p>
-
-          <button
-            onClick={handleClearCache}
-            style={{
-              background: '#ef4444',
-              color: '#ffffff',
-              border: 'none',
-              padding: '12px 24px',
-              borderRadius: '10px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              boxShadow: '0 4px 12px rgba(239, 68, 68, 0.25)',
-            }}
-          >
-            <i className="fa-solid fa-trash-can"></i>
-            Xóa Toàn Bộ Cache Redis (Flush DB)
-          </button>
-
-          {cacheMsg && (
-            <div style={{ marginTop: '16px', padding: '12px 16px', borderRadius: '8px', background: '#ecfdf5', color: '#065f46', fontWeight: '600', fontSize: '14px' }}>
-              ✓ {cacheMsg}
-            </div>
-          )}
-        </div>
-      )}
+  
 
       {/* MODAL THÊM SÁCH ĐỒNG BỘ */}
       <ContributeModal
