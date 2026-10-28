@@ -407,10 +407,15 @@ export default function App() {
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 340px', gap: '32px' }}>
               <div style={{ minWidth: 0 }}>
                 <CategoryFilter
-                  categories={categories}
-                  selectedCategory={selectedCategory}
-                  onSelectCategory={setSelectedCategory}
-                />
+  categories={categories}
+  selectedCategory={selectedCategory}
+  onSelectCategory={(cat) => {
+    setSelectedCategory(cat);
+    if ((cat === '✅ Đã đọc' || cat === 'Đã đọc') && currentUser?._id) {
+      fetchCompletedBookIds(currentUser._id);
+    }
+  }}
+/>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                   <h2 style={{ fontSize: '20px', fontWeight: '800', margin: 0, color: darkMode ? '#f8fafc' : '#0f172a' }}>
@@ -446,17 +451,22 @@ export default function App() {
             </div>
           </div>
         ) : (
-          <ReaderView
-            bookId={selectedBook?._id}
-            currentUser={currentUser}
-            darkMode={darkMode}
-            onToggleCompleted={handleToggleMarkCompleted}
-            onBack={() => {
-              setViewMode('portal');
-              fetchTrending();
-              if (currentUser?._id) fetchRecentHistory(currentUser._id);
-            }}
-          />
+      <ReaderView
+  bookId={selectedBook?._id}
+  currentUser={currentUser}
+  darkMode={darkMode}
+  onStatusChange={() => {
+    if (currentUser?._id) fetchCompletedBookIds(currentUser._id);
+  }}
+  onBack={() => {
+    setViewMode('portal');
+    fetchTrending();
+    if (currentUser?._id) {
+      fetchRecentHistory(currentUser._id);
+      fetchCompletedBookIds(currentUser._id);
+    }
+  }}
+/>
         )}
       </main>
 

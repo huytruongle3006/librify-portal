@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import BookReviews from './BookReviews';
 
-export default function ReaderView({ bookId, onBack, currentUser, darkMode }) {
+export default function ReaderView({ bookId, onBack, currentUser, darkMode, onStatusChange }) {
   const [book, setBook] = useState(null);
   const [activeChapterIndex, setActiveChapterIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -158,7 +158,7 @@ export default function ReaderView({ bookId, onBack, currentUser, darkMode }) {
     syncProgress(savedPageForChapter, chapIdx);
   };
 
-  const handleToggleMarkRead = async () => {
+const handleToggleMarkRead = async () => {
     if (!currentUser?._id || !bookId) return;
     try {
       const res = await axios.post('https://librify-backend.onrender.com/api/reader/toggle-completed', {
@@ -167,6 +167,7 @@ export default function ReaderView({ bookId, onBack, currentUser, darkMode }) {
       });
       if (res.data?.success) {
         setIsMarkedRead(res.data.isCompleted);
+        if (onStatusChange) onStatusChange(); // <-- Thêm dòng này để báo cho App.jsx
       }
     } catch (err) {
       console.error('Lỗi lưu trạng thái hoàn thành:', err);
